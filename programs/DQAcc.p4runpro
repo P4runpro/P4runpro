@@ -1,0 +1,16 @@
+@ mem 1024
+program databasequeryacceleration(<hdr.udp.dst_port, 9999, 0xffff>) {
+    EXTRACT(hdr.l5.op, har);
+    BRANCH:
+    case(<har, 0, 0xffffffff>) {
+        EXTRACT(hdr.l5.key1, sar);
+        HASH_MEM(mem);
+        LOADI(sar, 1);
+        MEMOR(mem);
+        BRANCH:
+        case(<sar, 1, 0xffffffff>) {
+            DROP;
+        };
+        FORWARD(0);
+    };
+}

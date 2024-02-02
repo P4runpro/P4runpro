@@ -1,0 +1,37 @@
+{
+    "epochs"    : 10000000,
+    "repeats"   : 1,
+    "optim" : 3,
+    "schemes" : [
+        {
+            "workload" : "capacity",
+            "granularity" : 256,
+            "a": 0.9,
+            "b": 0.1
+        },
+        {
+            "workload" : "capacity",
+            "granularity" : 256,
+            "a": 0.8,
+            "b": 0.2
+        },
+        {
+            "workload" : "capacity",
+            "granularity" : 256,
+            "a": 0.7,
+            "b": 0.3
+        },
+        {
+            "workload" : "capacity",
+            "granularity" : 256,
+            "a": 0.6,
+            "b": 0.4
+        },
+        {
+            "workload" : "capacity",
+            "granularity" : 256,
+            "a": 0.5,
+            "b": 0.5
+        }
+    ]
+}

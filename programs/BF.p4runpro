@@ -1,0 +1,14 @@
+@ bf_row1 1024
+@ bf_row2 1024
+@ bf_row3 1024
+program bf(<hdr.ipv4.src, 10.0.0.1, 0xffffff00>) {
+    LOADI(sar, 1);
+    HASH_5_TUPLE_MEM(bf_row1);
+    MEMOR(bf_row1);
+    LOADI(sar, 1);
+    HASH_5_TUPLE_MEM(bf_row2);
+    MEMOR(bf_row2);
+    LOADI(sar, 1);
+    HASH_5_TUPLE_MEM(bf_row3);
+    MEMOR(bf_row3);
+}

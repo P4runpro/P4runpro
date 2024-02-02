@@ -1,0 +1,480 @@
+{% for i in range(2) %}
+{% for stage in range(CONF[1][i][0], CONF[1][i][1]) %}
+control {{CONF[0][i]}}RPB{{stage + CONF[2][i]}}(
+{% if i == 0 %}
+        inout header_t hdr,
+        inout ig_metadata_t ig_md,
+        in ingress_intrinsic_metadata_t ig_intr_md,
+        in ingress_intrinsic_metadata_from_parser_t ig_intr_prsr_md,
+        inout ingress_intrinsic_metadata_for_deparser_t ig_intr_dprsr_md,
+        inout ingress_intrinsic_metadata_for_tm_t ig_intr_tm_md) {
+{% endif %}
+{% if i == 1 %}
+        inout header_t hdr,
+        inout eg_metadata_t eg_md,
+        in egress_intrinsic_metadata_t eg_intr_md,
+        in egress_intrinsic_metadata_from_parser_t eg_intr_md_from_prsr,
+        inout egress_intrinsic_metadata_for_deparser_t eg_intr_dprs_md,
+        inout egress_intrinsic_metadata_for_output_port_t eg_intr_oport_md) {
+{% endif %}
+
+        Register<bit<32>, _>(65536) rpb{{stage + CONF[2][i]}}_register;
+        RegisterAction<bit<32>, _, bit<32>>(rpb{{stage + CONF[2][i]}}_register) rpb{{stage + CONF[2][i]}}_salu_op1 = {
+            void apply(inout bit<32> value, out bit<32> result) {
+                if ( hdr.meta.param.salu_flag == 0) {
+                    value = value + hdr.meta.reg.sar;
+                }
+                else {
+                    value = value - hdr.meta.reg.sar;
+                }
+                result = value;
+            }
+        };
+
+        RegisterAction<bit<32>, _, bit<32>>(rpb{{stage + CONF[2][i]}}_register) rpb{{stage + CONF[2][i]}}_salu_op2 = {
+            void apply(inout bit<32> value, out bit<32> result) {
+                if ( hdr.meta.param.salu_flag == 0) {
+                    value = value & hdr.meta.reg.sar;
+                    result = value;
+                }
+                else {
+                    result = value;
+                    value = value | hdr.meta.reg.sar;
+                }
+            }
+        };
+
+        RegisterAction<bit<32>, _, bit<32>>(rpb{{stage + CONF[2][i]}}_register) rpb{{stage + CONF[2][i]}}_salu_op3 = {
+            void apply(inout bit<32> value, out bit<32> result) {
+                if ( hdr.meta.param.salu_flag == 1) {
+                    value = hdr.meta.reg.sar;
+                }
+                result = value;
+            }
+        };
+
+        RegisterAction<bit<32>, _, bit<32>>(rpb{{stage + CONF[2][i]}}_register) rpb{{stage + CONF[2][i]}}_salu_op4 = {
+            void apply(inout bit<32> value, out bit<32> result) {
+                if ( hdr.meta.reg.sar > value) {
+                    value = hdr.meta.reg.sar;
+                }
+                result = value;
+            }
+        };
+        
+        //CRC hash polynomial which need to be different in every stage
+        CRCPolynomial<bit<16>>(
+            coeff       = {{CONF[3][i][stage][0]}},
+            reversed    = {{CONF[3][i][stage][1]}},
+            msb         = {{CONF[3][i][stage][2]}},
+            extended    = {{CONF[3][i][stage][3]}},
+            init        = {{CONF[3][i][stage][4]}},
+            xor         = {{CONF[3][i][stage][5]}}
+        ) poly_rpb{{stage + CONF[2][i]}};
+
+        Hash<bit<16>>(HashAlgorithm_t.CUSTOM, poly_rpb{{stage + CONF[2][i]}}) hash1_rpb{{stage + CONF[2][i]}};
+        Hash<bit<16>>(HashAlgorithm_t.CUSTOM, poly_rpb{{stage + CONF[2][i]}}) hash2_rpb{{stage + CONF[2][i]}};
+
+        //action for forwarding
+
+{% if i == 0 %}
+        action rt() {           //return a packet to its sender
+            bit<48> mac_tmp = hdr.ethernet.dst;
+            hdr.ethernet.dst = hdr.ethernet.src;
+            hdr.ethernet.src = mac_tmp;
+            bit<32> ip_tmp = hdr.ipv4.dst;
+            hdr.ipv4.dst = hdr.ipv4.src;
+            hdr.ipv4.src = ip_tmp;
+            //ig_intr_tm_md.ucast_egress_port = ig_intr_md.ingress_port;
+            hdr.meta.rec.egress_port = ig_intr_md.ingress_port;
+        }
+
+        action forward(bit<9> port)  {
+            //ig_intr_tm_md.ucast_egress_port = port;
+            hdr.meta.rec.egress_port = port;
+        }
+        
+        action drop() {         //drop the packet
+            ig_intr_dprsr_md.drop_ctl = 1;
+        }
+
+        action report() {
+            //ig_intr_tm_md.ucast_egress_port = PORT_CPU;
+            hdr.meta.rec.egress_port = PORT_CPU;
+        }
+
+{% endif %}
+        //action for branch
+        action set_branch_id(bit<8> branch_id) {
+            hdr.meta.id.branch_id = branch_id;
+        }
+
+        //action for hash
+        action hash_5_tuple() {
+            hdr.meta.reg.har[15:0] = hash1_rpb{{stage + CONF[2][i]}}.get({
+                hdr.ipv4.src, 
+                hdr.ipv4.dst, 
+                hdr.l4_port.src_port, 
+                hdr.l4_port.dst_port, 
+                hdr.ipv4.protocol
+            });
+        }
+
+        action hash_customization() {
+            hdr.meta.reg.har[15:0] = hash2_rpb{{stage + CONF[2][i]}}.get({
+                hdr.meta.reg.har
+            });
+        }
+
+        action hash_5_tuple_mem() {
+            hdr.meta.reg.mar[15:0] = hash1_rpb{{stage + CONF[2][i]}}.get({
+                hdr.ipv4.src, 
+                hdr.ipv4.dst, 
+                hdr.l4_port.src_port, 
+                hdr.l4_port.dst_port, 
+                hdr.ipv4.protocol
+            });
+        }
+
+        action hash_customization_mem() {
+            hdr.meta.reg.mar[15:0] = hash2_rpb{{stage + CONF[2][i]}}.get({
+                hdr.meta.reg.har
+            });
+        }
+
+        //action for header interaction
+{% if i == 1 %}
+        action extract_egintrmddeqtimedelta_har() {
+            hdr.meta.reg.har = (bit<32>)eg_intr_md.deq_timedelta;
+        }
+        action modify_hdripv4ecn_sar() {
+            hdr.ipv4.ecn = (bit<2>)hdr.meta.reg.sar;
+        }
+
+{% endif %}
+        action extract_hdrl5op_har() {
+            hdr.meta.reg.har = hdr.l5.op;
+        }
+        
+        action extract_hdrl5key1_sar() {
+            hdr.meta.reg.sar = hdr.l5.key1;
+        }
+
+        action extract_hdrl5key2_mar() {
+            hdr.meta.reg.mar = hdr.l5.key2;
+        }
+
+        action extract_hdrtcptcp4thword_sar() {
+            hdr.meta.reg.sar = hdr.tcp.tcp4thword;
+        }
+
+        action extract_hdripv4totallen_sar() {
+            hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
+        }
+
+        action modify_hdrl5key3_sar() {
+            hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        //action for SALU operaiton
+        action salu_add_sub() {
+            hdr.meta.reg.sar = rpb{{stage + CONF[2][i]}}_salu_op1.execute((bit<16>)hdr.meta.param.physical_address);
+        }
+        action salu_and_or() {
+            hdr.meta.reg.sar = rpb{{stage + CONF[2][i]}}_salu_op2.execute((bit<16>)hdr.meta.param.physical_address);
+        }
+        action salu_read_write() {
+            hdr.meta.reg.sar = rpb{{stage + CONF[2][i]}}_salu_op3.execute((bit<16>)hdr.meta.param.physical_address);
+        }
+        action salu_max() {
+            hdr.meta.reg.sar = rpb{{stage + CONF[2][i]}}_salu_op4.execute((bit<16>)hdr.meta.param.physical_address);
+        }
+
+        //action for PHV ALU operation
+
+        action address_translation_mask(bit<32> mask) {
+            hdr.meta.reg.mar = hdr.meta.reg.mar & mask;
+        }
+
+        action address_translation_offset(bit<32> offset, bit<8> flag) {
+            hdr.meta.param.physical_address = hdr.meta.reg.mar + offset;
+            hdr.meta.param.salu_flag = flag;
+        }
+        
+        action loadi_mar(bit<32> i) {
+            hdr.meta.reg.mar = i;
+        }
+
+        action backup() {
+            hdr.meta.param.backup1 = hdr.meta.reg.mar;
+            hdr.meta.param.backup2 = hdr.meta.reg.sar;
+            hdr.meta.param.backup3 = hdr.meta.reg.har;
+        }
+
+        action recover1() {
+             hdr.meta.reg.mar = hdr.meta.param.backup1;
+        }
+
+        action recover2() {
+             hdr.meta.reg.sar = hdr.meta.param.backup2;
+        }
+
+        action recover3() {
+             hdr.meta.reg.har = hdr.meta.param.backup3;
+        }
+
+        action loadi_sar(bit<32> i) {
+            hdr.meta.reg.sar = i;
+        }
+
+        action loadi_har(bit<32> i) {
+            hdr.meta.reg.har = i;
+        }
+
+        action add_mar_sar() {
+            hdr.meta.reg.mar = hdr.meta.reg.mar + hdr.meta.reg.sar;
+        }
+
+        action add_mar_har() {
+            hdr.meta.reg.mar = hdr.meta.reg.mar + hdr.meta.reg.har;
+        }
+
+        action add_sar_mar() {
+            hdr.meta.reg.sar = hdr.meta.reg.sar + hdr.meta.reg.mar;
+        }
+
+        action add_sar_har() {
+            hdr.meta.reg.sar = hdr.meta.reg.sar + hdr.meta.reg.har;
+        }
+
+        action add_har_mar() {
+            hdr.meta.reg.har = hdr.meta.reg.har + hdr.meta.reg.mar;
+        }
+
+        action add_har_sar() {
+            hdr.meta.reg.har = hdr.meta.reg.har + hdr.meta.reg.sar;
+        }
+
+        action and_mar_sar() {
+            hdr.meta.reg.mar = hdr.meta.reg.mar & hdr.meta.reg.sar;
+        }
+
+        action and_mar_har() {
+            hdr.meta.reg.mar = hdr.meta.reg.mar & hdr.meta.reg.har;
+        }
+
+        action and_sar_mar() {
+            hdr.meta.reg.sar = hdr.meta.reg.sar & hdr.meta.reg.mar;
+        }
+
+        action and_sar_har() {
+            hdr.meta.reg.sar = hdr.meta.reg.sar & hdr.meta.reg.har;
+        }
+
+        action and_har_mar() {
+            hdr.meta.reg.har = hdr.meta.reg.har & hdr.meta.reg.mar;
+        }
+
+        action and_har_sar() {
+            hdr.meta.reg.har = hdr.meta.reg.har & hdr.meta.reg.sar;
+        }
+
+        action or_mar_sar() {
+            hdr.meta.reg.mar = hdr.meta.reg.mar | hdr.meta.reg.sar;
+        }
+
+        action or_mar_har() {
+            hdr.meta.reg.mar = hdr.meta.reg.mar | hdr.meta.reg.har;
+        }
+
+        action or_sar_mar() {
+            hdr.meta.reg.sar = hdr.meta.reg.sar | hdr.meta.reg.mar;
+        }
+
+        action or_sar_har() {
+            hdr.meta.reg.sar = hdr.meta.reg.sar | hdr.meta.reg.har;
+        }
+
+        action or_har_mar() {
+            hdr.meta.reg.har = hdr.meta.reg.har | hdr.meta.reg.mar;
+        }
+
+        action or_har_sar() {
+            hdr.meta.reg.har = hdr.meta.reg.har | hdr.meta.reg.sar;
+        }
+
+        action xor_mar_sar() {
+            hdr.meta.reg.mar = hdr.meta.reg.mar ^ hdr.meta.reg.sar;
+        }
+
+        action xor_mar_har() {
+            hdr.meta.reg.mar = hdr.meta.reg.mar ^ hdr.meta.reg.har;
+        }
+
+        action xor_sar_mar() {
+            hdr.meta.reg.sar = hdr.meta.reg.sar ^ hdr.meta.reg.mar;
+        }
+
+        action xor_sar_har() {
+            hdr.meta.reg.sar = hdr.meta.reg.sar ^ hdr.meta.reg.har;
+        }
+
+        action xor_har_mar() {
+            hdr.meta.reg.har = hdr.meta.reg.har ^ hdr.meta.reg.mar;
+        }
+
+        action xor_har_sar() {
+            hdr.meta.reg.har = hdr.meta.reg.har ^ hdr.meta.reg.sar;
+        }
+
+        action max_mar_sar() {
+            hdr.meta.reg.mar = (hdr.meta.reg.mar > hdr.meta.reg.sar ? hdr.meta.reg.mar : hdr.meta.reg.sar);
+        }
+
+        action max_mar_har() {
+            hdr.meta.reg.mar = (hdr.meta.reg.mar > hdr.meta.reg.har ? hdr.meta.reg.mar : hdr.meta.reg.har);
+        }
+
+        action max_sar_mar() {
+            hdr.meta.reg.sar = (hdr.meta.reg.sar > hdr.meta.reg.mar ? hdr.meta.reg.sar : hdr.meta.reg.mar);
+        }
+
+        action max_sar_har() {
+            hdr.meta.reg.sar = (hdr.meta.reg.sar > hdr.meta.reg.har ? hdr.meta.reg.sar : hdr.meta.reg.har);
+        }
+
+        action max_har_mar() {
+            hdr.meta.reg.har = (hdr.meta.reg.har > hdr.meta.reg.mar ? hdr.meta.reg.har : hdr.meta.reg.mar);
+        }
+
+        action max_har_sar() {
+            hdr.meta.reg.har = (hdr.meta.reg.har > hdr.meta.reg.sar ? hdr.meta.reg.har : hdr.meta.reg.sar);
+        }
+
+        action min_mar_sar() {
+            hdr.meta.reg.mar = (hdr.meta.reg.mar < hdr.meta.reg.sar ? hdr.meta.reg.mar : hdr.meta.reg.sar);
+        }
+
+        action min_mar_har() {
+            hdr.meta.reg.mar = (hdr.meta.reg.mar < hdr.meta.reg.har ? hdr.meta.reg.mar : hdr.meta.reg.har);
+        }
+
+        action min_sar_mar() {
+            hdr.meta.reg.sar = (hdr.meta.reg.sar < hdr.meta.reg.mar ? hdr.meta.reg.sar : hdr.meta.reg.mar);
+        }
+
+        action min_sar_har() {
+            hdr.meta.reg.sar = (hdr.meta.reg.sar < hdr.meta.reg.har ? hdr.meta.reg.sar : hdr.meta.reg.har);
+        }
+
+        action min_har_mar() {
+            hdr.meta.reg.har = (hdr.meta.reg.har < hdr.meta.reg.mar ? hdr.meta.reg.har : hdr.meta.reg.mar);
+        }
+
+        action min_har_sar() {
+            hdr.meta.reg.har = (hdr.meta.reg.har < hdr.meta.reg.sar ? hdr.meta.reg.har : hdr.meta.reg.sar);
+        }
+
+        @pragma stage {{stage}}
+        table tb_operation {
+            key = {
+                hdr.meta.id.flow_id : exact;
+                hdr.meta.id.branch_id : exact;
+                hdr.meta.rec.iterations : exact;
+                hdr.meta.reg.mar : ternary;
+                hdr.meta.reg.sar : ternary;
+                hdr.meta.reg.har : ternary;
+            }
+            actions = {
+                NoAction;
+
+                address_translation_mask;
+                address_translation_offset;
+
+                //backup;
+                //recover1;
+                //recover2;
+                //recover3;
+
+                hash_5_tuple;
+                hash_5_tuple_mem;
+                hash_customization;
+                hash_customization_mem;
+
+                set_branch_id;
+
+{% if i == 1 %}
+                extract_egintrmddeqtimedelta_har;
+                modify_hdripv4ecn_sar;
+{% endif %}
+                extract_hdrl5op_har;
+                extract_hdrl5key1_sar;
+                extract_hdrl5key2_mar;
+                extract_hdrtcptcp4thword_sar;
+                extract_hdripv4totallen_sar;
+                modify_hdrl5key3_sar;
+
+                salu_add_sub;
+                salu_and_or;
+                salu_read_write;
+                salu_max;
+                
+                loadi_mar;
+                loadi_sar;
+                loadi_har;
+                add_mar_sar;
+                add_mar_har;
+                add_sar_mar;
+                add_sar_har;
+                add_har_mar;
+                add_har_sar;
+                and_mar_sar;
+                and_mar_har;
+                and_sar_mar;
+                and_sar_har;
+                and_har_mar;
+                and_har_sar;
+                or_mar_sar;
+                or_mar_har;
+                or_sar_mar;
+                or_sar_har;
+                or_har_mar;
+                or_har_sar;
+                xor_mar_sar;
+                xor_mar_har;
+                xor_sar_mar;
+                xor_sar_har;
+                xor_har_mar;
+                xor_har_sar;
+                max_mar_sar;
+                max_mar_har;
+                max_sar_mar;
+                max_sar_har;
+                max_har_mar;
+                max_har_sar;
+                min_mar_sar;
+                min_mar_har;
+                min_sar_mar;
+                min_sar_har;
+                min_har_mar;
+                min_har_sar;
+
+{% if i == 0 %}
+                rt;
+                drop;
+                forward;
+                report;
+{% endif %}
+            }
+            default_action = NoAction();
+            size = 2048;
+        }
+
+        apply{
+            if(hdr.meta.isValid()) {
+                tb_operation.apply();
+            }
+        }
+}
+{% endfor %}
+{% endfor %}

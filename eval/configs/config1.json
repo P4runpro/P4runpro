@@ -1,0 +1,23 @@
+{
+    "epochs"    : 500,
+    "repeats"   : 10,
+    "optim" : 3,
+    "schemes" : [
+        {
+            "workload" : "cache",
+            "granularity" : 256
+        },
+        {
+            "workload" : "lb",
+            "granularity" : 256
+        }, 
+        {
+            "workload" : "hh",
+            "granularity" : 256
+        }, 
+        {
+            "workload" : "mixed",
+            "granularity" : 256
+        }
+    ]
+}

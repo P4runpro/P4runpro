@@ -1,0 +1,26 @@
+program calculation(<hdr.udp.dst_port, 8888, 0xffff>){
+    EXTRACT(hdr.l5.op, har);
+    EXTRACT(hdr.l5.key1, sar);
+    EXTRACT(hdr.l5.key2, mar);
+    BRANCH:
+    case(<har, 1 , 0xfffffffff>){
+        ADD(sar, mar);
+        MODIFY(hdr.l5.key3, sar);
+    }
+    case(<har, 2 , 0xfffffffff>){
+        SUB(sar, mar);
+        MODIFY(hdr.l5.key3, sar);
+    }
+    case(<har, 3 , 0xfffffffff>){
+        AND(sar, mar);
+        MODIFY(hdr.l5.key3, sar);
+    }
+    case(<har, 4 , 0xfffffffff>){
+        OR(sar, mar);
+        MODIFY(hdr.l5.key3, sar);
+    }
+    case(<har, 5 , 0xfffffffff>){
+        XOR(sar, mar);
+        MODIFY(hdr.l5.key3, sar);
+    };
+}

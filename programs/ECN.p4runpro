@@ -1,0 +1,19 @@
+program ecn(<hdr.ipv4.src, 0, 0>) {
+    NOP;
+    NOP;
+    NOP;
+    NOP;
+    NOP;
+    NOP;
+    NOP;
+    NOP;
+    NOP;
+    NOP;
+    EXTRACT(egintrmd.deqtimedelta, har);  #egintrmd.deqtimedelta can only be accessed at egress pipeline
+    LOADI(sar, 1000);
+    SGT(sar, har);
+    BRANCH:
+    case(<sar, 0, 0xffffffff>) {
+        MODIFY(hdr.ipv4.ecn, sar);
+    };
+}

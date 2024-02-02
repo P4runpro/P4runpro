@@ -1,0 +1,6 @@
+program tunnel_rule1(<hdr.tunnel.dst_id, 0, 0xffff>){
+    FORWARD(0);
+}
+program tunnel_rule2(<hdr.tunnel.dst_id, 1, 0xffff>){
+    FORWARD(1);
+}

@@ -1,0 +1,22 @@
+@ state 1024
+program statefulfirewall(<hdr.ipv4.src, 10.0.0.0, 0xffffff00>,
+    <hdr.ipv4.protocol, 6, 0xff>
+) {
+	EXTRACT(hdr.tcp.tcp4thword, sar);
+    HASH_5_TUPLE_MEM(state);
+	BRANCH:
+	case(<sar, 65538, 0x0003ffff>) {
+        LOADI(sar, 1);
+        MEMWRITE(state);
+	}
+    case(<sar, 65537, 0x0003ffff>) {
+        LOADI(sar, 0);
+        MEMWRITE(state);
+	};
+	MEMREAD(state);
+    BRANCH:
+    case(<sar, 0, 0xffffffff>) {
+        DROP;
+    };
+    FORWARD(0);
+}

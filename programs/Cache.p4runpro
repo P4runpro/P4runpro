@@ -1,0 +1,26 @@
+@ mem1 1024
+program cache(<hdr.udp.dst_port, 7777, 0xffff>) {
+	EXTRACT(hdr.l5.op, har);
+	EXTRACT(hdr.l5.key1, sar);
+	EXTRACT(hdr.l5.key2, mar);
+	BRANCH:
+	case(<sar, 1, 0xffffffff>,
+		<har, 0x00000000, 0xffffffff>,
+		<mar, 0x00008888, 0xffffffff>
+	) {
+		RETURN;
+		LOADI(mar, 123);
+		MEMREAD(mem1);
+		MODIFY(hdr.l5.key2, sar);
+	}
+	case(<sar, 2, 0xffffffff>,
+		<har, 0x00000000, 0xffffffff>,
+		<mar, 0x00008888, 0xffffffff>
+	) {
+		DROP;
+		LOADI(mar, 123);
+		EXTRACT(hdr.l5.key3, sar);
+		MEMWRITE(mem1);
+	};
+	FORWARD(32);
+}

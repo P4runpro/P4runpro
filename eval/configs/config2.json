@@ -1,0 +1,71 @@
+{
+    "epochs"    : 500,
+    "repeats"   : 10,
+    "optim" : 3,
+    "schemes" : [
+        {
+            "workload" : "cache",
+            "granularity" : 256
+        },
+        {
+            "workload" : "cache",
+            "granularity" : 512
+        }, 
+        {
+            "workload" : "cache",
+            "granularity" : 1024
+        }, 
+        {
+            "workload" : "cache",
+            "granularity" : 2048
+        },
+        {
+            "workload" : "lb",
+            "granularity" : 256
+        },
+        {
+            "workload" : "lb",
+            "granularity" : 512
+        }, 
+        {
+            "workload" : "lb",
+            "granularity" : 1024
+        }, 
+        {
+            "workload" : "lb",
+            "granularity" : 2048
+        },
+        {
+            "workload" : "hh",
+            "granularity" : 256
+        },
+        {
+            "workload" : "hh",
+            "granularity" : 512
+        }, 
+        {
+            "workload" : "hh",
+            "granularity" : 1024
+        }, 
+        {
+            "workload" : "hh",
+            "granularity" : 2048
+        },
+        {
+            "workload" : "mixed",
+            "granularity" : 256
+        },
+        {
+            "workload" : "mixed",
+            "granularity" : 512
+        }, 
+        {
+            "workload" : "mixed",
+            "granularity" : 1024
+        }, 
+        {
+            "workload" : "mixed",
+            "granularity" : 2048
+        }
+    ]
+}

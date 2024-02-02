@@ -1,0 +1,167 @@
+@ hll 32
+program hll(<hdr.ipv4.src, 10.0.0.1, 0xffff0000>) {
+    HASH_5_TUPLE;
+    BRANCH:
+    case(<har, 0x20, 0x20>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 1);
+        MEMMAX(hll);
+    }
+    case(<har, 0x40, 0x60>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 2);
+        MEMMAX(hll);
+    }
+    case(<har, 0x80, 0xe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 3);
+        MEMMAX(hll);
+    }
+    case(<har, 0x100, 0x1e0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 4);
+        MEMMAX(hll);
+    }
+    case(<har, 0x200, 0x3e0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 5);
+        MEMMAX(hll);
+    }
+    case(<har, 0x400, 0x7e0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 6);
+        MEMMAX(hll);
+    }
+    case(<har, 0x800, 0xfe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 7);
+        MEMMAX(hll);
+    }
+    case(<har, 0x1000, 0x1fe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 8);
+        MEMMAX(hll);
+    }
+    case(<har, 0x2000, 0x3fe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 9);
+        MEMMAX(hll);
+    }
+    case(<har, 0x4000, 0x7fe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 10);
+        MEMMAX(hll);
+    }
+    case(<har, 0x8000, 0xffe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 11);
+        MEMMAX(hll);
+    }
+    case(<har, 0x10000, 0x1ffe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 12);
+        MEMMAX(hll);
+    }
+    case(<har, 0x20000, 0x3ffe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 13);
+        MEMMAX(hll);
+    }
+    case(<har, 0x40000, 0x7ffe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 14);
+        MEMMAX(hll);
+    }
+    case(<har, 0x80000, 0xfffe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 15);
+        MEMMAX(hll);
+    }
+    case(<har, 0x100000, 0x1fffe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 16);
+        MEMMAX(hll);
+    }
+    case(<har, 0x200000, 0x3fffe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 17);
+        MEMMAX(hll);
+    }
+    case(<har, 0x400000, 0x7fffe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 18);
+        MEMMAX(hll);
+    }
+    case(<har, 0x800000, 0xffffe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 19);
+        MEMMAX(hll);
+    }
+    case(<har, 0x1000000, 0x1ffffe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 20);
+        MEMMAX(hll);
+    }
+    case(<har, 0x2000000, 0x3ffffe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 21);
+        MEMMAX(hll);
+    }
+    case(<har, 0x4000000, 0x7ffffe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 22);
+        MEMMAX(hll);
+    }
+    case(<har, 0x8000000, 0xfffffe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 23);
+        MEMMAX(hll);
+    }
+    case(<har, 0x10000000, 0x1fffffe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 24);
+        MEMMAX(hll);
+    }
+    case(<har, 0x20000000, 0x3fffffe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 25);
+        MEMMAX(hll);
+    }
+    case(<har, 0x40000000, 0x7fffffe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 26);
+        MEMMAX(hll);
+    }
+    case(<har, 0x80000000, 0xffffffe0>) {
+        ADD(mar,har);
+        ANDI(mar, 0x1f);
+        LOADI(sar, 27);
+        MEMMAX(hll);
+    };
+}

@@ -1,0 +1,11 @@
+{
+    "epochs"    : 3000,
+    "repeats"   : 1,
+    "optim" : 3,
+    "schemes" : [
+        {
+            "workload" : "lb",
+            "granularity" : 256
+        }
+    ]
+}

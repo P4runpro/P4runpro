@@ -1,0 +1,201 @@
+{
+    "epochs"    : 100000000,
+    "repeats"   : 1,
+    "optim" : 3,
+    "schemes" : [
+        {
+            "workload" : "cache",
+            "granularity" : 256
+        }, 
+        {
+            "workload" : "cache",
+            "granularity" : 128
+        }, 
+        {
+            "workload" : "cache",
+            "granularity" : 64
+        }, 
+
+        {
+            "workload" : "lb",
+            "granularity" : 256
+        }, 
+        {
+            "workload" : "lb",
+            "granularity" : 128
+        }, 
+        {
+            "workload" : "lb",
+            "granularity" : 64
+        },
+
+        {
+            "workload" : "hh",
+            "granularity" : 256
+        }, 
+        {
+            "workload" : "hh",
+            "granularity" : 128
+        }, 
+        {
+            "workload" : "hh",
+            "granularity" : 64
+        }, 
+
+        {
+            "workload" : "bf",
+            "granularity" : 256
+        }, 
+        {
+            "workload" : "bf",
+            "granularity" : 128
+        }, 
+        {
+            "workload" : "bf",
+            "granularity" : 64
+        }, 
+
+        {
+            "workload" : "calc",
+            "granularity" : 256
+        }, 
+        {
+            "workload" : "calc",
+            "granularity" : 128
+        }, 
+        {
+            "workload" : "calc",
+            "granularity" : 64
+        }, 
+
+        {
+            "workload" : "cms",
+            "granularity" : 256
+        }, 
+        {
+            "workload" : "cms",
+            "granularity" : 128
+        }, 
+        {
+            "workload" : "cms",
+            "granularity" : 64
+        }, 
+
+        {
+            "workload" : "acc",
+            "granularity" : 256
+        }, 
+        {
+            "workload" : "acc",
+            "granularity" : 128
+        }, 
+        {
+            "workload" : "acc",
+            "granularity" : 64
+        }, 
+
+        {
+            "workload" : "ecn",
+            "granularity" : 256
+        }, 
+        {
+            "workload" : "ecn",
+            "granularity" : 128
+        }, 
+        {
+            "workload" : "ecn",
+            "granularity" : 64
+        }, 
+
+        {
+            "workload" : "hll",
+            "granularity" : 256
+        }, 
+        {
+            "workload" : "hll",
+            "granularity" : 128
+        }, 
+        {
+            "workload" : "hll",
+            "granularity" : 64
+        }, 
+
+        {
+            "workload" : "l2",
+            "granularity" : 256
+        }, 
+        {
+            "workload" : "l2",
+            "granularity" : 128
+        }, 
+        {
+            "workload" : "l2",
+            "granularity" : 64
+        }, 
+
+        {
+            "workload" : "l3",
+            "granularity" : 256
+        }, 
+        {
+            "workload" : "l3",
+            "granularity" : 128
+        }, 
+        {
+            "workload" : "l3",
+            "granularity" : 64
+        }, 
+
+        {
+            "workload" : "nc",
+            "granularity" : 256
+        }, 
+        {
+            "workload" : "nc",
+            "granularity" : 128
+        }, 
+        {
+            "workload" : "nc",
+            "granularity" : 64
+        }, 
+
+        {
+            "workload" : "sf",
+            "granularity" : 256
+        }, 
+        {
+            "workload" : "sf",
+            "granularity" : 128
+        }, 
+        {
+            "workload" : "sf",
+            "granularity" : 64
+        }, 
+
+        {
+            "workload" : "sm",
+            "granularity" : 256
+        }, 
+        {
+            "workload" : "sm",
+            "granularity" : 128
+        }, 
+        {
+            "workload" : "sm",
+            "granularity" : 64
+        }, 
+
+        {
+            "workload" : "tn",
+            "granularity" : 256
+        }, 
+        {
+            "workload" : "tn",
+            "granularity" : 128
+        }, 
+        {
+            "workload" : "tn",
+            "granularity" : 64
+        }
+    ]
+}

@@ -1,0 +1,6 @@
+program l3routing_rule1(<hdr.ipv4.dst, 10.0.0.1, 0xffffff00>) {
+    FORWARD(0);
+}
+program l3routing_rule2(<hdr.ipv4.dst, 10.0.1.1, 0xffffff00>) {
+    FORWARD(1);
+}

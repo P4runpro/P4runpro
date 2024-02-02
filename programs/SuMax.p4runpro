@@ -1,0 +1,14 @@
+@ sumax_row1 1024
+@ sumax_row2 1024
+@ sumax_row3 1024
+program sumax(<hdr.ipv4.src, 10.0.0.1, 0xffffff00>) {
+    EXTRACT(hdr.ipv4.totallen, sar);
+    HASH_5_TUPLE_MEM(sumax_row1);
+    MEMMAX(sumax_row1);
+    EXTRACT(hdr.ipv4.totallen, sar);
+    HASH_5_TUPLE_MEM(sumax_row2);
+    MEMMAX(sumax_row2);
+    EXTRACT(hdr.ipv4.totallen, sar);
+    HASH_5_TUPLE_MEM(sumax_row3);
+    MEMMAX(sumax_row3);
+}
