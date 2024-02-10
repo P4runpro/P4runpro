@@ -207,6 +207,13 @@ def get_supportive_reg(reg_name_ls):
         return all[0]
     return None
 
+def type_check(type_list, check_list):
+    if len(type_list) != len(type_check):
+        return False
+    for i in range(len(type_list)):
+        if type_list[i] != check_list[i]:
+            return False
+    return True
 
 if __name__ == "__main__":
     print(size_to_mask(1024))

@@ -384,6 +384,7 @@ def get_entry_rpb(ast_node):
         ["hdr.meta.reg.har", 0, 0, "ternary"],
     ]
     data_list = []
+    argument_t_list = []
     argument_list = []
     case_list = []
 
@@ -408,28 +409,39 @@ def get_entry_rpb(ast_node):
                 for c in reversed(node.children):
                     s.push(c)
             elif node.type == "argument":
+                argument_t_list.append(node.data_type)
                 argument_list.append(node.data_value)
         if ast_node.name == "EXTRACT" or ast_node.name == "MODIFY":
+            if not type_check(argument_t_list, ["field, register"]):
+                print("Argument number or type error in primitive: " + ast_node.name)
             data_list = [
                 [],
                 prefix + str(rpb_number) + "." + primitive_action_mapping_dict[ast_node.name].replace("<arg1>", argument_list[0].replace(".", "")).replace("<arg2>", argument_list[1])
             ]
         elif ast_node.name == "LOADI":
+            if not type_check(argument_t_list, ["register, int"]):
+                print("Argument number or type error in primitive: " + ast_node.name)
             data_list = [
                 [["i", argument_list[1]]],
                 prefix + str(rpb_number) + "." + primitive_action_mapping_dict[ast_node.name].replace("<arg1>", argument_list[0])
             ]
         elif ast_node.name == "ADD" or ast_node.name == "AND" or ast_node.name == "OR" or ast_node.name =="XOR" or ast_node.name =="MAX" or ast_node.name =="MIN":
+            if not type_check(argument_t_list, ["register, register"]):
+                print("Argument number or type error in primitive: " + ast_node.name)
             data_list = [
                 [],
                 prefix + str(rpb_number) + "." + primitive_action_mapping_dict[ast_node.name].replace("<arg1>", argument_list[0]).replace("<arg2>", argument_list[1])
             ]
         elif ast_node.name == "MEMADD" or ast_node.name == "MEMSUB" or ast_node.name == "MEMAND" or ast_node.name == "MEMOR" or ast_node.name == "MEMREAD" or ast_node.name == "MEMWRITE" or ast_node.name == "MEMMAX":
+            if not type_check(argument_t_list, ["identifier"]):
+                print("Argument number or type error in primitive: " + ast_node.name)
             data_list = [
                 [],
                 prefix + str(rpb_number) + "." + primitive_action_mapping_dict[ast_node.name]
             ]
-        elif ast_node.name == "FORWARD" or ast_node.name == "DROP" or ast_node.name == "REPORT":
+        elif ast_node.name == "FORWARD":
+            if not type_check(argument_t_list, ["int"]):
+                print("Argument number or type error in primitive: " + ast_node.name)
             data_list = [
                 [["port", argument_list[0]]],
                 prefix + str(rpb_number) + "." + primitive_action_mapping_dict[ast_node.name]

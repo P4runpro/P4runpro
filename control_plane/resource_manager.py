@@ -54,6 +54,7 @@ class Manager:
             for i in range(1, 23):
                 self.register_pool_available["rpb" + str(i)].add(self.allocated_program[program_name][1][i-1])
             self.flow_id_pool_available.add(self.allocated_program[program_name][2])
+            self.allocated_program.pop(program_name)
 
     def get_flow_id(self):
         if self.flow_id_pool_available:
@@ -73,6 +74,9 @@ class Manager:
     
     def entry_allocated(self, e):
         self.allocated_program_entry[e.entry["program"]].append(e)
-    
-    def get_clear_list(self):
-        return self.allocated_program_entry
+
+    def get_clear_list(self, p):
+        if p in self.allocated_program_entry.keys():
+            return self.allocated_program_entry[p]
+        else:
+            return None

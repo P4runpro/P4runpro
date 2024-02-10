@@ -27,7 +27,6 @@ def p_annotation(p):
         p[0] = p[1]
     elif len(p) == 4:
         p[0] = Annotation("annotation", 1, None, p[2][1], p[3][1])
-    # TODO: type check
 
 def p_prgrams(p):
     '''programs : program
@@ -59,7 +58,6 @@ def p_rule(p):
         p[0] = Rule("rule", 1, None, (p[2][1], p[4][1], p[6][1]))
     elif p[4][0] == "int":
         p[0] = Rule("rule", 1, None, (p[2][1], p[4][1], p[6][1]))
-    # TODO check rule
 
 def p_primitives(p):
     '''primitives : primitive
@@ -77,9 +75,9 @@ def p_primitive(p):
         p[0] = Primitive("primitive", 1, None, p[1], False)
     elif len(p) == 6:
         p[0] = Primitive("primitive", 1, [p[3]], p[1], True)
+
     elif len(p) == 5:
         p[0] = Primitive("primitive", p[3].value[0] + 1, [p[3]], p[1], False, p[3].value[1])
-    #TODO check arguments
 
 def p_arguments(p):
     '''arguments : argument
@@ -132,4 +130,4 @@ def p_error(p):
         print("Line: " + str(p.lineno) + ", position: " + str(p.lexpos) + ", syntax error at token " + str(p.value))
 
 
-parser = yacc.yacc()
+parser = yacc.yacc(optimize=1)
