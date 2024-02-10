@@ -77,7 +77,7 @@ Note:  the first step can be skipped because there is already code that can be r
   ```
 
 
-##### Revoke a program
+##### Revoking a program
 
 ```bash
 P4runpro> revoke -p cache
