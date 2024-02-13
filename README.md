@@ -54,9 +54,9 @@ Note:  the first step can be skipped because there is already code that can be r
   ```bash
   Subscribe attempt #1
   Subscribe response received 0
-  Binding with p4_name p4r2
-  Binding with p4_name p4r2 successful!!
-  Received p4r2 on GetForwarding on client 0, device 0
+  Binding with p4_name p4runpro
+  Binding with p4_name p4runpro successful!!
+  Received p4runpro on GetForwarding on client 0, device 0
   connect successfully!
   p4 program: p4runpro
   client id: 0
