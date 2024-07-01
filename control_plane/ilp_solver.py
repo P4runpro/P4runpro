@@ -5,6 +5,7 @@
 
 import gurobipy as grb
 
+# used for debug
 tb_not_ava = [
     [],
     [],
@@ -38,7 +39,7 @@ max_rec_time = 5
 ub = 5*22
 
 
-def solve(max_slice_number, tb_not_ava, mem_not_ava, forward, max_rec_time=5, max_rpb_number=22, max_ingressrpb_number=10):
+def solve(max_slice_number, tb_not_ava, mem_not_ava, forward, max_rec_time=2, max_rpb_number=22, max_ingressrpb_number=10):
     model = grb.Model("P4runpro")
     x = model.addVars(max_slice_number, lb=0, ub=max_rpb_number*max_rec_time-1, vtype=grb.GRB.INTEGER, name="x")
     #m = model.addVar(lb=0, ub=max_rpb_number*max_rec_time-1, vtype=grb.GRB.INTEGER, name="m")
@@ -58,19 +59,22 @@ def solve(max_slice_number, tb_not_ava, mem_not_ava, forward, max_rec_time=5, ma
         model.addConstr(x[i] <= x[i+1] - 1)
         i = i + 1
 
+    # Attention: in the ILP solver the Inequality constraints below 
+    # for the memory and table entries is unavailable
+
     # table entry constrains
-    for i in range(max_slice_number):
-        ls = tb_not_ava[i]
-        for j in ls:
-            for k in range(max_rec_time):
-                model.addConstr(x[i] != j + max_rpb_number*k)
+    # for i in range(max_slice_number):
+    #     ls = tb_not_ava[i]
+    #     for j in ls:
+    #         for k in range(max_rec_time):
+    #             model.addConstr(x[i] != j + max_rpb_number*k)
 
     # memory constrains
-    for i in range(max_slice_number):
-        ls = mem_not_ava[i]
-        for j in ls:
-            for k in range(max_rec_time):
-                model.addConstr(x[i] != j + max_rpb_number*k)
+    # for i in range(max_slice_number):
+    #     ls = mem_not_ava[i]
+    #     for j in ls:
+    #         for k in range(max_rec_time):
+    #             model.addConstr(x[i] != j + max_rpb_number*k)
 
     # forward
     for j in forward:

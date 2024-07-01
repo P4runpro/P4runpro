@@ -11,7 +11,7 @@ program cache(<hdr.udp.dst_port, 7777, 0xffff>) {
 		RETURN;
 		LOADI(mar, 123);
 		MEMREAD(mem1);
-		MODIFY(hdr.l5.key2, sar);
+		MODIFY(hdr.l5.key3, sar);
 	}
 	case(<sar, 2, 0xffffffff>,
 		<har, 0x00000000, 0xffffffff>,

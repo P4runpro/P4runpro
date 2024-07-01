@@ -1,7 +1,7 @@
 @ cms_row1 1024
 @ cms_row2 1024
 @ cms_row3 1024
-program cms(<hdr.ipv4.src, 10.0.0.1, 0xffffff00>) {
+program cms(<hdr.ipv4.src, 2.0.0.0, 0xffffff00>) {
     LOADI(sar, 1);
     HASH_5_TUPLE_MEM(cms_row1);
     MEMADD(cms_row1);

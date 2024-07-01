@@ -2,6 +2,8 @@
 #define _INGRESS_
 
 #include "runproblock.p4"
+#include "initblock.p4"
+#include "recblock.p4"
 
 control SwitchIngress(
         inout header_t hdr,

@@ -1,5 +1,5 @@
 @ hll 32
-program hll(<hdr.ipv4.src, 10.0.0.1, 0xffff0000>) {
+program hll(<hdr.ipv4.src, 5.0.0.0, 0xffff0000>) {
     HASH_5_TUPLE;
     BRANCH:
     case(<har, 0x20, 0x20>) {

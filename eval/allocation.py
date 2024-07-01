@@ -236,9 +236,11 @@ class AllocationEvent:
         print(mem_not_ava)
         print(forward)
         '''
-
-        suc, max_rpb_num, global_stage_ls = solve(max_slice_number, tb_not_ava, mem_not_ava, forward, optimize=self.optim)
-        #suc, max_rpb_num, global_stage_ls = solve(max_slice_number, tb_not_ava, mem_not_ava, forward, optimize=self.optim, a=self.scheme["a"], b=self.scheme["b"])
+        
+        if "a" in self.scheme.keys() and "b" in self.scheme.keys():
+            suc, max_rpb_num, global_stage_ls = solve(max_slice_number, tb_not_ava, mem_not_ava, forward, optimize=self.optim, a=self.scheme["a"], b=self.scheme["b"])
+        else:
+            suc, max_rpb_num, global_stage_ls = solve(max_slice_number, tb_not_ava, mem_not_ava, forward, optimize=self.optim)
 
         if suc:
             table_entry_requirement = [0 for i in range(22)]
@@ -352,6 +354,15 @@ def allocation_process(config_name, scheme_number, repeat, epochs, scheme, optim
         "../programs/SuMax.p4runpro",
         "../programs/Tunnel.p4runpro"
     ]
+    if "case_num" in scheme.keys():
+        if scheme["case_num"] == 16:
+            input_files[0] = "./programs_16/Cache.p4runpro"
+            input_files[2] = "./programs_16/LoadBalancer.p4runpro"
+            input_files[11] = "./programs_16/NetCache.p4runpro"
+        elif scheme["case_num"] == 256:
+            input_files[0] = "./programs_256/Cache.p4runpro"
+            input_files[2] = "./programs_256/LoadBalancer.p4runpro"
+            input_files[11] = "./programs_256/NetCache.p4runpro"
     workloads = preparation(scheme["granularity"], input_files)
     event = AllocationEvent(config_name, scheme_number, repeat, epochs, scheme, workloads, optim)
     event.start()

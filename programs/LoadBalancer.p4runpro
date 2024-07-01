@@ -1,6 +1,6 @@
 @ dippool 1024
 @ portpool  1024
-program loadbanlancer(<hdr.ipv4.dst, 10.0.0.0, 0xffffff00>) {
+program loadbanlancer(<hdr.ipv4.dst, 7.0.0.0, 0xffffff00>) {
     HASH_5_TUPLE_MEM(portpool);
     MEMREAD(portpool);
     BRANCH:

@@ -81,7 +81,7 @@ class Primitive(Node):
     - name: primitive name
     - has_arg: True if this primitive has arguments
     """
-    def __init__(self, type, value, children, name, has_arg=False, case_num=0):
+    def __init__(self, type, value, children, name, has_arg=False, case_num=0, pname=None):
         super(Primitive, self).__init__(type, value, children)
         self.name = name
         self.has_arg = has_arg
@@ -90,6 +90,8 @@ class Primitive(Node):
         self.mem_name = 0
         self.last_pri = False
         self.pop_num = 1
+        if pname is not None:
+            self.pname = pname
 
 
 class Argument(Node):

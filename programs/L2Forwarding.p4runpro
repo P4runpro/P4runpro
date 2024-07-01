@@ -1,9 +1,9 @@
-program l2forwarding_rule1(<hdr.ethernet.src, 0, 0>,
+program l2forwarding_rule1(<hdr.ethernet.src, 1, 0xffffffffff>,
     <ig_intr_md.ingress_port, 0, 0x1ff>
 ) {
     FORWARD(1);
 }
-program l2forwarding_rule2(<hdr.ethernet.src, 0, 0>,
+program l2forwarding_rule2(<hdr.ethernet.src, 2, 0xffffffffff>,
     <ig_intr_md.ingress_port, 1, 0x1ff>
 ) {
     FORWARD(0);

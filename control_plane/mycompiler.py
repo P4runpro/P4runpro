@@ -8,7 +8,13 @@ from ilp_solver import *
 from runtime import *
 
 
-def compile(manager, rt, program):
+def compile(rt, manager, program, eval=False):
+    '''
+    function for P4runpro programs compilation
+    -rt: runtime
+    -manager: resource manager
+    -program: P4runpro programs
+    '''
     s_stage = Stack()
     s_branch = Stack()
     fbranchs = {}
@@ -45,9 +51,9 @@ def compile(manager, rt, program):
             node.flow_id = flow_id
             node.branch_id = 0
             node.pname = node.name
-            if node.pname in pri_nodes.keys():
-                print("Error: duplicated program name: " + node.pname)
-                exit()
+            if node.pname in pri_nodes.keys() or manager.check_existence(node.pname) :
+                print("Compilation stops, the program " + node.pname + " already exists!")
+                return
             pri_nodes[node.pname] = [node]
             fbranchs[node.pname] = {}
         if node.type == "primitive":
@@ -114,7 +120,7 @@ def compile(manager, rt, program):
 
 
 
-    # aligning
+    # aligning the memory operation of the AST
     aligning_tuples = {}
     #print(mem_stage_raw.items())
     for mem_id, ins_ls in mem_stage_raw.items():
@@ -162,20 +168,20 @@ def compile(manager, rt, program):
             '''
 
 
-    # parse pseudo primitives
+    # do register lifetime analysis and then translate the pseudo primitives amd memory operation primitives
     pri_nodes = parse_pseudo_primitive(pri_nodes, fbranchs)
 
     # debug
-    for pname, primitive_ls in pri_nodes.items():
-        for pri in primitive_ls[1:]:
-            print(pri.name)
-            print(pri.stage)
-            print(pri.branch_id)
+    #for pname, primitive_ls in pri_nodes.items():
+    #    for pri in primitive_ls[1:]:
+    #        print(pri.name)
+    #        print(pri.stage)
+    #        print(pri.branch_id)
     #exit()
 
             
 
-    # allocate programs and generate table entries
+    # generate the constraints from the resource manager
     for pname, primitive_ls in pri_nodes.items():
         print("Allocating program:" + pname)
         max_slice_number = -1
@@ -215,7 +221,8 @@ def compile(manager, rt, program):
         print(mem_not_ava)
         print(forward)
         '''
-        print(forward)
+
+        # solve the constraints
         suc, max_rpb_num, global_stage_ls = solve(max_slice_number, tb_not_ava, mem_not_ava, forward)
 
         if suc:
@@ -246,7 +253,7 @@ def compile(manager, rt, program):
             print("Allocation done, using " + str(max_rpb_num) + " logic rpb")
             #print(global_stage_ls)
 
-            # generate table entries
+            # generate table entries and dump them to the data plane
             print("Configuring table entries")
             entries = []
             fid = primitive_ls[0].flow_id
@@ -268,41 +275,51 @@ def compile(manager, rt, program):
 
             # dump table entries
             
-            '''eval
-            iterations = 50
-            dumped = []
-            t1 = 0
-            t2 = 0
-            t_ls = []
-
-            for i in range(iterations):
-                try:
-                    t1 = time.time()
+            if eval:
+                iterations = 50
+                dumped = []
+                t1 = 0
+                t2 = 0
+                t_ls = []
+                for i in range(iterations):
+                    try:
+                        t1 = time.time()
+                        for e in entries:
+                            rt.entry_add(e.entry["table_name"], e.entry["key_list"], e.entry["data_list"])
+                            dumped.append(e)
+                        t2 = time.time()
+                        t_ls.append((t2-t1)*1000)
+                    except Exception as err:
+                        print(traceback.format_exc())
+                        print(err)
                     for e in entries:
-                        e.show()
-                        rt.entry_add(e.entry["table_name"], e.entry["key_list"], e.entry["data_list"])
-                        dumped.append(e)
-                    t2 = time.time()
-                    t_ls.append(t2-t1)
-                except Exception as err:
-                    print(traceback.format_exc())
-                    print(err)
-                for e in entries:
-                    rt.entry_del(e.entry["table_name"], e.entry["key_list"])
-            '''
-            if not manager.get_clear_list(pname):
-                manager.get_clear_list(pname).clear()
+                        rt.entry_del(e.entry["table_name"], e.entry["key_list"])
+                return sum(t_ls)/50
+            
+            #manager.clear_if_exist(pname)
             try:
                 for e in entries:
+                    # e.show()
                     rt.entry_add(e.entry["table_name"], e.entry["key_list"], e.entry["data_list"])
                     manager.entry_allocated(e)
             except Exception as err:
+                print("Error when configuring, revoke the entries")
+                revoke(rt, manager, pname)
                 print(traceback.format_exc())
                 print(err)
+            print("Configuration done")
         else:
             print("allocation fails")
+    return 
 
-def revoke(manager, rt, program):
-    for e in reversed(manager.get_clear_list(program)):
+def revoke(rt, manager, program):
+    print("Revoke program:" + program)
+    allocate_program_entry = manager.get_allocated_program_entry(program)
+    if allocate_program_entry is None:
+        print("Revoking: program \"" + program + "\" not exists.")
+        return
+    for e in reversed(allocate_program_entry):
         rt.entry_del(e.entry["table_name"], e.entry["key_list"])
+    manager.clear_if_exist(program)
+    print("Revoking: done")
     

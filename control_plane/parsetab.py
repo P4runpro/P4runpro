@@ -8,7 +8,7 @@ _lr_method = 'LALR'
 
 _lr_signature = 'ADDRESS ANNOTATION CASE COLON COMMA FIELD IDENTIFIER INT LBRACE LESSTHAN LPAREN MORETHAN PRIMITIVE PRIMITIVE_BRANCH PRIMITIVE_NO_ARG PROGRAM RBRACE REGISTER RPAREN SEMICOLONstart : annotations programsannotations : annotation\n                   | annotations annotationannotation : empty\n                  | ANNOTATION IDENTIFIER INTprograms : program\n                | programs programprogram : PROGRAM IDENTIFIER LPAREN rules RPAREN LBRACE primitives RBRACErules : rule\n             | rules COMMA rulerule : empty\n            | LESSTHAN FIELD COMMA ADDRESS COMMA INT MORETHAN\n            | LESSTHAN FIELD COMMA INT COMMA INT MORETHANprimitives : primitive\n                  | primitives primitiveprimitive : PRIMITIVE LPAREN arguments RPAREN SEMICOLON\n                 | PRIMITIVE_NO_ARG SEMICOLON\n                 | PRIMITIVE_BRANCH COLON cases SEMICOLONarguments : argument\n                 | arguments COMMA argumentargument : IDENTIFIER\n                | FIELD\n                | ADDRESS\n                | REGISTER\n                | INTcases : case\n             | cases casecase : CASE LPAREN condition RPAREN LBRACE primitives RBRACE\n            | CASE LPAREN condition COMMA condition RPAREN LBRACE primitives RBRACE\n            | CASE LPAREN condition COMMA condition COMMA condition RPAREN LBRACE primitives RBRACEcondition : LESSTHAN REGISTER COMMA INT COMMA INT MORETHANempty :'
     
-_lr_action_items = {'LESSTHAN':([14,20,53,64,71,],[16,16,58,58,58,]),'ANNOTATION':([0,1,4,5,8,11,],[3,-2,-4,3,-3,-5,]),'SEMICOLON':([28,39,40,52,54,73,80,83,],[35,51,-26,-27,60,-28,-29,-30,]),'RBRACE':([25,26,32,35,51,60,69,77,82,],[-14,33,-15,-17,-18,-16,73,80,83,]),'PROGRAM':([0,1,4,5,8,9,10,11,13,33,],[-32,-2,-4,7,-3,7,-6,-5,-7,-8,]),'COMMA':([14,15,17,18,20,21,23,30,31,42,43,44,45,46,47,48,56,57,59,61,62,67,68,79,],[-32,20,-9,-11,-32,24,-10,37,38,55,-19,-25,-21,-23,-24,-22,-12,-13,64,-20,65,71,72,-31,]),'CASE':([34,39,40,52,73,80,83,],[41,41,-26,-27,-28,-29,-30,]),'INT':([6,24,36,37,38,55,65,72,],[11,31,44,49,50,44,68,76,]),'LBRACE':([19,63,70,78,],[22,66,74,81,]),'RPAREN':([14,15,17,18,20,23,42,43,44,45,46,47,48,56,57,59,61,67,75,79,],[-32,19,-9,-11,-32,-10,54,-19,-25,-21,-23,-24,-22,-12,-13,63,-20,70,78,-31,]),'PRIMITIVE':([22,25,26,32,35,51,60,66,69,74,77,81,82,],[29,-14,29,-15,-17,-18,-16,29,29,29,29,29,29,]),'IDENTIFIER':([3,7,36,55,],[6,12,45,45,]),'PRIMITIVE_BRANCH':([22,25,26,32,35,51,60,66,69,74,77,81,82,],[27,-14,27,-15,-17,-18,-16,27,27,27,27,27,27,]),'PRIMITIVE_NO_ARG':([22,25,26,32,35,51,60,66,69,74,77,81,82,],[28,-14,28,-15,-17,-18,-16,28,28,28,28,28,28,]),'ADDRESS':([24,36,55,],[30,46,46,]),'REGISTER':([36,55,58,],[47,47,62,]),'FIELD':([16,36,55,],[21,48,48,]),'LPAREN':([12,29,41,],[14,36,53,]),'$end':([2,9,10,13,33,],[0,-1,-6,-7,-8,]),'COLON':([27,],[34,]),'MORETHAN':([49,50,76,],[56,57,79,]),}
+_lr_action_items = {'REGISTER':([32,52,61,],[40,40,64,]),'PROGRAM':([0,2,4,5,8,9,10,11,13,33,],[-32,7,-4,-2,7,-3,-6,-5,-7,-8,]),'IDENTIFIER':([1,7,32,52,],[6,12,45,45,]),'ADDRESS':([24,32,52,],[30,43,43,]),'INT':([6,24,32,37,38,52,67,75,],[11,31,41,49,50,41,71,78,]),'SEMICOLON':([29,46,47,51,53,74,80,83,],[36,-26,54,58,-27,-28,-29,-30,]),'PRIMITIVE_BRANCH':([22,26,27,34,36,54,58,66,70,73,77,79,82,],[28,-14,28,-15,-17,-18,-16,28,28,28,28,28,28,]),'RPAREN':([14,15,17,18,20,23,39,40,41,42,43,44,45,56,57,59,60,65,72,81,],[-32,19,-11,-9,-32,-10,-19,-24,-25,51,-23,-22,-21,-12,-13,-20,63,69,76,-31,]),'PRIMITIVE':([22,26,27,34,36,54,58,66,70,73,77,79,82,],[25,-14,25,-15,-17,-18,-16,25,25,25,25,25,25,]),'ANNOTATION':([0,2,4,5,9,11,],[1,1,-4,-2,-3,-5,]),'$end':([3,8,10,13,33,],[0,-1,-6,-7,-8,]),'LPAREN':([12,25,48,],[14,32,55,]),'LESSTHAN':([14,20,55,62,68,],[16,16,61,61,61,]),'COLON':([28,],[35,]),'RBRACE':([26,27,34,36,54,58,70,77,82,],[-14,33,-15,-17,-18,-16,74,80,83,]),'MORETHAN':([49,50,78,],[56,57,81,]),'FIELD':([16,32,52,],[21,44,44,]),'LBRACE':([19,63,69,76,],[22,66,73,79,]),'CASE':([35,46,47,53,74,80,83,],[48,-26,48,-27,-28,-29,-30,]),'COMMA':([14,15,17,18,20,21,23,30,31,39,40,41,42,43,44,45,56,57,59,60,64,65,71,81,],[-32,20,-11,-9,-32,24,-10,37,38,-19,-24,-25,52,-23,-22,-21,-12,-13,-20,62,67,68,75,-31,]),'PRIMITIVE_NO_ARG':([22,26,27,34,36,54,58,66,70,73,77,79,82,],[29,-14,29,-15,-17,-18,-16,29,29,29,29,29,29,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'rules':([14,],[15,]),'program':([5,9,],[10,13,]),'case':([34,39,],[40,52,]),'rule':([14,20,],[17,23,]),'argument':([36,55,],[43,61,]),'primitive':([22,26,66,69,74,77,81,82,],[25,32,25,32,25,32,25,32,]),'primitives':([22,66,74,81,],[26,69,77,82,]),'annotation':([0,5,],[1,8,]),'start':([0,],[2,]),'arguments':([36,],[42,]),'empty':([0,5,14,20,],[4,4,18,18,]),'programs':([5,],[9,]),'annotations':([0,],[5,]),'condition':([53,64,71,],[59,67,75,]),'cases':([34,],[39,]),}
+_lr_goto_items = {'argument':([32,52,],[39,59,]),'case':([35,47,],[46,53,]),'condition':([55,62,68,],[60,65,72,]),'start':([0,],[3,]),'arguments':([32,],[42,]),'rules':([14,],[15,]),'programs':([2,],[8,]),'primitive':([22,27,66,70,73,77,79,82,],[26,34,26,34,26,34,26,34,]),'primitives':([22,66,73,79,],[27,70,77,82,]),'annotations':([0,],[2,]),'cases':([35,],[47,]),'annotation':([0,2,],[5,9,]),'empty':([0,2,14,20,],[4,4,17,17,]),'program':([2,8,],[10,13,]),'rule':([14,20,],[18,23,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -27,36 +27,36 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> start","S'",1,None,None,None),
-  ('start -> annotations programs','start',2,'p_start','myparser.py',13),
-  ('annotations -> annotation','annotations',1,'p_annotations','myparser.py',17),
-  ('annotations -> annotations annotation','annotations',2,'p_annotations','myparser.py',18),
-  ('annotation -> empty','annotation',1,'p_annotation','myparser.py',25),
-  ('annotation -> ANNOTATION IDENTIFIER INT','annotation',3,'p_annotation','myparser.py',26),
-  ('programs -> program','programs',1,'p_prgrams','myparser.py',34),
-  ('programs -> programs program','programs',2,'p_prgrams','myparser.py',35),
-  ('program -> PROGRAM IDENTIFIER LPAREN rules RPAREN LBRACE primitives RBRACE','program',8,'p_program','myparser.py',42),
-  ('rules -> rule','rules',1,'p_rules','myparser.py',46),
-  ('rules -> rules COMMA rule','rules',3,'p_rules','myparser.py',47),
-  ('rule -> empty','rule',1,'p_rule','myparser.py',54),
-  ('rule -> LESSTHAN FIELD COMMA ADDRESS COMMA INT MORETHAN','rule',7,'p_rule','myparser.py',55),
-  ('rule -> LESSTHAN FIELD COMMA INT COMMA INT MORETHAN','rule',7,'p_rule','myparser.py',56),
-  ('primitives -> primitive','primitives',1,'p_primitives','myparser.py',66),
-  ('primitives -> primitives primitive','primitives',2,'p_primitives','myparser.py',67),
-  ('primitive -> PRIMITIVE LPAREN arguments RPAREN SEMICOLON','primitive',5,'p_primitive','myparser.py',74),
-  ('primitive -> PRIMITIVE_NO_ARG SEMICOLON','primitive',2,'p_primitive','myparser.py',75),
-  ('primitive -> PRIMITIVE_BRANCH COLON cases SEMICOLON','primitive',4,'p_primitive','myparser.py',76),
-  ('arguments -> argument','arguments',1,'p_arguments','myparser.py',86),
-  ('arguments -> arguments COMMA argument','arguments',3,'p_arguments','myparser.py',87),
-  ('argument -> IDENTIFIER','argument',1,'p_argument','myparser.py',94),
-  ('argument -> FIELD','argument',1,'p_argument','myparser.py',95),
-  ('argument -> ADDRESS','argument',1,'p_argument','myparser.py',96),
-  ('argument -> REGISTER','argument',1,'p_argument','myparser.py',97),
-  ('argument -> INT','argument',1,'p_argument','myparser.py',98),
-  ('cases -> case','cases',1,'p_cases','myparser.py',102),
-  ('cases -> cases case','cases',2,'p_cases','myparser.py',103),
-  ('case -> CASE LPAREN condition RPAREN LBRACE primitives RBRACE','case',7,'p_case','myparser.py',111),
-  ('case -> CASE LPAREN condition COMMA condition RPAREN LBRACE primitives RBRACE','case',9,'p_case','myparser.py',112),
-  ('case -> CASE LPAREN condition COMMA condition COMMA condition RPAREN LBRACE primitives RBRACE','case',11,'p_case','myparser.py',113),
-  ('condition -> LESSTHAN REGISTER COMMA INT COMMA INT MORETHAN','condition',7,'p_condition','myparser.py',122),
-  ('empty -> <empty>','empty',0,'p_empty','myparser.py',126),
+  ('start -> annotations programs','start',2,'p_start','myparser.py',12),
+  ('annotations -> annotation','annotations',1,'p_annotations','myparser.py',16),
+  ('annotations -> annotations annotation','annotations',2,'p_annotations','myparser.py',17),
+  ('annotation -> empty','annotation',1,'p_annotation','myparser.py',24),
+  ('annotation -> ANNOTATION IDENTIFIER INT','annotation',3,'p_annotation','myparser.py',25),
+  ('programs -> program','programs',1,'p_prgrams','myparser.py',32),
+  ('programs -> programs program','programs',2,'p_prgrams','myparser.py',33),
+  ('program -> PROGRAM IDENTIFIER LPAREN rules RPAREN LBRACE primitives RBRACE','program',8,'p_program','myparser.py',40),
+  ('rules -> rule','rules',1,'p_rules','myparser.py',44),
+  ('rules -> rules COMMA rule','rules',3,'p_rules','myparser.py',45),
+  ('rule -> empty','rule',1,'p_rule','myparser.py',52),
+  ('rule -> LESSTHAN FIELD COMMA ADDRESS COMMA INT MORETHAN','rule',7,'p_rule','myparser.py',53),
+  ('rule -> LESSTHAN FIELD COMMA INT COMMA INT MORETHAN','rule',7,'p_rule','myparser.py',54),
+  ('primitives -> primitive','primitives',1,'p_primitives','myparser.py',63),
+  ('primitives -> primitives primitive','primitives',2,'p_primitives','myparser.py',64),
+  ('primitive -> PRIMITIVE LPAREN arguments RPAREN SEMICOLON','primitive',5,'p_primitive','myparser.py',71),
+  ('primitive -> PRIMITIVE_NO_ARG SEMICOLON','primitive',2,'p_primitive','myparser.py',72),
+  ('primitive -> PRIMITIVE_BRANCH COLON cases SEMICOLON','primitive',4,'p_primitive','myparser.py',73),
+  ('arguments -> argument','arguments',1,'p_arguments','myparser.py',83),
+  ('arguments -> arguments COMMA argument','arguments',3,'p_arguments','myparser.py',84),
+  ('argument -> IDENTIFIER','argument',1,'p_argument','myparser.py',91),
+  ('argument -> FIELD','argument',1,'p_argument','myparser.py',92),
+  ('argument -> ADDRESS','argument',1,'p_argument','myparser.py',93),
+  ('argument -> REGISTER','argument',1,'p_argument','myparser.py',94),
+  ('argument -> INT','argument',1,'p_argument','myparser.py',95),
+  ('cases -> case','cases',1,'p_cases','myparser.py',99),
+  ('cases -> cases case','cases',2,'p_cases','myparser.py',100),
+  ('case -> CASE LPAREN condition RPAREN LBRACE primitives RBRACE','case',7,'p_case','myparser.py',108),
+  ('case -> CASE LPAREN condition COMMA condition RPAREN LBRACE primitives RBRACE','case',9,'p_case','myparser.py',109),
+  ('case -> CASE LPAREN condition COMMA condition COMMA condition RPAREN LBRACE primitives RBRACE','case',11,'p_case','myparser.py',110),
+  ('condition -> LESSTHAN REGISTER COMMA INT COMMA INT MORETHAN','condition',7,'p_condition','myparser.py',119),
+  ('empty -> <empty>','empty',0,'p_empty','myparser.py',123),
 ]

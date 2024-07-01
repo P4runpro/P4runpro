@@ -91,46 +91,24 @@ state 0
     (32) empty -> .
 
   ! shift/reduce conflict for ANNOTATION resolved as shift
-    ANNOTATION      shift and go to state 3
+    ANNOTATION      shift and go to state 1
     PROGRAM         reduce using rule 32 (empty -> .)
 
   ! ANNOTATION      [ reduce using rule 32 (empty -> .) ]
 
-    annotations                    shift and go to state 5
-    start                          shift and go to state 2
     empty                          shift and go to state 4
-    annotation                     shift and go to state 1
+    annotations                    shift and go to state 2
+    start                          shift and go to state 3
+    annotation                     shift and go to state 5
 
 state 1
-
-    (2) annotations -> annotation .
-
-    ANNOTATION      reduce using rule 2 (annotations -> annotation .)
-    PROGRAM         reduce using rule 2 (annotations -> annotation .)
-
-
-state 2
-
-    (0) S' -> start .
-
-
-
-state 3
 
     (5) annotation -> ANNOTATION . IDENTIFIER INT
 
     IDENTIFIER      shift and go to state 6
 
 
-state 4
-
-    (4) annotation -> empty .
-
-    ANNOTATION      reduce using rule 4 (annotation -> empty .)
-    PROGRAM         reduce using rule 4 (annotation -> empty .)
-
-
-state 5
+state 2
 
     (1) start -> annotations . programs
     (3) annotations -> annotations . annotation
@@ -143,16 +121,38 @@ state 5
 
   ! shift/reduce conflict for ANNOTATION resolved as shift
   ! shift/reduce conflict for PROGRAM resolved as shift
-    ANNOTATION      shift and go to state 3
+    ANNOTATION      shift and go to state 1
     PROGRAM         shift and go to state 7
 
   ! ANNOTATION      [ reduce using rule 32 (empty -> .) ]
   ! PROGRAM         [ reduce using rule 32 (empty -> .) ]
 
-    annotation                     shift and go to state 8
-    program                        shift and go to state 10
+    programs                       shift and go to state 8
+    annotation                     shift and go to state 9
     empty                          shift and go to state 4
-    programs                       shift and go to state 9
+    program                        shift and go to state 10
+
+state 3
+
+    (0) S' -> start .
+
+
+
+state 4
+
+    (4) annotation -> empty .
+
+    ANNOTATION      reduce using rule 4 (annotation -> empty .)
+    PROGRAM         reduce using rule 4 (annotation -> empty .)
+
+
+state 5
+
+    (2) annotations -> annotation .
+
+    ANNOTATION      reduce using rule 2 (annotations -> annotation .)
+    PROGRAM         reduce using rule 2 (annotations -> annotation .)
+
 
 state 6
 
@@ -170,14 +170,6 @@ state 7
 
 state 8
 
-    (3) annotations -> annotations annotation .
-
-    ANNOTATION      reduce using rule 3 (annotations -> annotations annotation .)
-    PROGRAM         reduce using rule 3 (annotations -> annotations annotation .)
-
-
-state 9
-
     (1) start -> annotations programs .
     (7) programs -> programs . program
     (8) program -> . PROGRAM IDENTIFIER LPAREN rules RPAREN LBRACE primitives RBRACE
@@ -186,6 +178,14 @@ state 9
     PROGRAM         shift and go to state 7
 
     program                        shift and go to state 13
+
+state 9
+
+    (3) annotations -> annotations annotation .
+
+    ANNOTATION      reduce using rule 3 (annotations -> annotations annotation .)
+    PROGRAM         reduce using rule 3 (annotations -> annotations annotation .)
+
 
 state 10
 
@@ -232,9 +232,9 @@ state 14
     RPAREN          reduce using rule 32 (empty -> .)
     COMMA           reduce using rule 32 (empty -> .)
 
-    rule                           shift and go to state 17
+    empty                          shift and go to state 17
+    rule                           shift and go to state 18
     rules                          shift and go to state 15
-    empty                          shift and go to state 18
 
 state 15
 
@@ -255,18 +255,18 @@ state 16
 
 state 17
 
-    (9) rules -> rule .
-
-    RPAREN          reduce using rule 9 (rules -> rule .)
-    COMMA           reduce using rule 9 (rules -> rule .)
-
-
-state 18
-
     (11) rule -> empty .
 
     RPAREN          reduce using rule 11 (rule -> empty .)
     COMMA           reduce using rule 11 (rule -> empty .)
+
+
+state 18
+
+    (9) rules -> rule .
+
+    RPAREN          reduce using rule 9 (rules -> rule .)
+    COMMA           reduce using rule 9 (rules -> rule .)
 
 
 state 19
@@ -288,8 +288,8 @@ state 20
     RPAREN          reduce using rule 32 (empty -> .)
     COMMA           reduce using rule 32 (empty -> .)
 
+    empty                          shift and go to state 17
     rule                           shift and go to state 23
-    empty                          shift and go to state 18
 
 state 21
 
@@ -308,12 +308,12 @@ state 22
     (17) primitive -> . PRIMITIVE_NO_ARG SEMICOLON
     (18) primitive -> . PRIMITIVE_BRANCH COLON cases SEMICOLON
 
-    PRIMITIVE       shift and go to state 29
-    PRIMITIVE_NO_ARG shift and go to state 28
-    PRIMITIVE_BRANCH shift and go to state 27
+    PRIMITIVE       shift and go to state 25
+    PRIMITIVE_NO_ARG shift and go to state 29
+    PRIMITIVE_BRANCH shift and go to state 28
 
-    primitive                      shift and go to state 25
-    primitives                     shift and go to state 26
+    primitive                      shift and go to state 26
+    primitives                     shift and go to state 27
 
 state 23
 
@@ -334,6 +334,13 @@ state 24
 
 state 25
 
+    (16) primitive -> PRIMITIVE . LPAREN arguments RPAREN SEMICOLON
+
+    LPAREN          shift and go to state 32
+
+
+state 26
+
     (14) primitives -> primitive .
 
     RBRACE          reduce using rule 14 (primitives -> primitive .)
@@ -342,7 +349,7 @@ state 25
     PRIMITIVE_BRANCH reduce using rule 14 (primitives -> primitive .)
 
 
-state 26
+state 27
 
     (8) program -> PROGRAM IDENTIFIER LPAREN rules RPAREN LBRACE primitives . RBRACE
     (15) primitives -> primitives . primitive
@@ -351,31 +358,24 @@ state 26
     (18) primitive -> . PRIMITIVE_BRANCH COLON cases SEMICOLON
 
     RBRACE          shift and go to state 33
-    PRIMITIVE       shift and go to state 29
-    PRIMITIVE_NO_ARG shift and go to state 28
-    PRIMITIVE_BRANCH shift and go to state 27
+    PRIMITIVE       shift and go to state 25
+    PRIMITIVE_NO_ARG shift and go to state 29
+    PRIMITIVE_BRANCH shift and go to state 28
 
-    primitive                      shift and go to state 32
-
-state 27
-
-    (18) primitive -> PRIMITIVE_BRANCH . COLON cases SEMICOLON
-
-    COLON           shift and go to state 34
-
+    primitive                      shift and go to state 34
 
 state 28
 
-    (17) primitive -> PRIMITIVE_NO_ARG . SEMICOLON
+    (18) primitive -> PRIMITIVE_BRANCH . COLON cases SEMICOLON
 
-    SEMICOLON       shift and go to state 35
+    COLON           shift and go to state 35
 
 
 state 29
 
-    (16) primitive -> PRIMITIVE . LPAREN arguments RPAREN SEMICOLON
+    (17) primitive -> PRIMITIVE_NO_ARG . SEMICOLON
 
-    LPAREN          shift and go to state 36
+    SEMICOLON       shift and go to state 36
 
 
 state 30
@@ -394,13 +394,23 @@ state 31
 
 state 32
 
-    (15) primitives -> primitives primitive .
+    (16) primitive -> PRIMITIVE LPAREN . arguments RPAREN SEMICOLON
+    (19) arguments -> . argument
+    (20) arguments -> . arguments COMMA argument
+    (21) argument -> . IDENTIFIER
+    (22) argument -> . FIELD
+    (23) argument -> . ADDRESS
+    (24) argument -> . REGISTER
+    (25) argument -> . INT
 
-    RBRACE          reduce using rule 15 (primitives -> primitives primitive .)
-    PRIMITIVE       reduce using rule 15 (primitives -> primitives primitive .)
-    PRIMITIVE_NO_ARG reduce using rule 15 (primitives -> primitives primitive .)
-    PRIMITIVE_BRANCH reduce using rule 15 (primitives -> primitives primitive .)
+    IDENTIFIER      shift and go to state 45
+    FIELD           shift and go to state 44
+    ADDRESS         shift and go to state 43
+    REGISTER        shift and go to state 40
+    INT             shift and go to state 41
 
+    argument                       shift and go to state 39
+    arguments                      shift and go to state 42
 
 state 33
 
@@ -412,6 +422,16 @@ state 33
 
 state 34
 
+    (15) primitives -> primitives primitive .
+
+    RBRACE          reduce using rule 15 (primitives -> primitives primitive .)
+    PRIMITIVE       reduce using rule 15 (primitives -> primitives primitive .)
+    PRIMITIVE_NO_ARG reduce using rule 15 (primitives -> primitives primitive .)
+    PRIMITIVE_BRANCH reduce using rule 15 (primitives -> primitives primitive .)
+
+
+state 35
+
     (18) primitive -> PRIMITIVE_BRANCH COLON . cases SEMICOLON
     (26) cases -> . case
     (27) cases -> . cases case
@@ -419,12 +439,12 @@ state 34
     (29) case -> . CASE LPAREN condition COMMA condition RPAREN LBRACE primitives RBRACE
     (30) case -> . CASE LPAREN condition COMMA condition COMMA condition RPAREN LBRACE primitives RBRACE
 
-    CASE            shift and go to state 41
+    CASE            shift and go to state 48
 
-    cases                          shift and go to state 39
-    case                           shift and go to state 40
+    case                           shift and go to state 46
+    cases                          shift and go to state 47
 
-state 35
+state 36
 
     (17) primitive -> PRIMITIVE_NO_ARG SEMICOLON .
 
@@ -433,26 +453,6 @@ state 35
     PRIMITIVE_NO_ARG reduce using rule 17 (primitive -> PRIMITIVE_NO_ARG SEMICOLON .)
     PRIMITIVE_BRANCH reduce using rule 17 (primitive -> PRIMITIVE_NO_ARG SEMICOLON .)
 
-
-state 36
-
-    (16) primitive -> PRIMITIVE LPAREN . arguments RPAREN SEMICOLON
-    (19) arguments -> . argument
-    (20) arguments -> . arguments COMMA argument
-    (21) argument -> . IDENTIFIER
-    (22) argument -> . FIELD
-    (23) argument -> . ADDRESS
-    (24) argument -> . REGISTER
-    (25) argument -> . INT
-
-    IDENTIFIER      shift and go to state 45
-    FIELD           shift and go to state 48
-    ADDRESS         shift and go to state 46
-    REGISTER        shift and go to state 47
-    INT             shift and go to state 44
-
-    argument                       shift and go to state 43
-    arguments                      shift and go to state 42
 
 state 37
 
@@ -470,32 +470,26 @@ state 38
 
 state 39
 
-    (18) primitive -> PRIMITIVE_BRANCH COLON cases . SEMICOLON
-    (27) cases -> cases . case
-    (28) case -> . CASE LPAREN condition RPAREN LBRACE primitives RBRACE
-    (29) case -> . CASE LPAREN condition COMMA condition RPAREN LBRACE primitives RBRACE
-    (30) case -> . CASE LPAREN condition COMMA condition COMMA condition RPAREN LBRACE primitives RBRACE
+    (19) arguments -> argument .
 
-    SEMICOLON       shift and go to state 51
-    CASE            shift and go to state 41
+    RPAREN          reduce using rule 19 (arguments -> argument .)
+    COMMA           reduce using rule 19 (arguments -> argument .)
 
-    case                           shift and go to state 52
 
 state 40
 
-    (26) cases -> case .
+    (24) argument -> REGISTER .
 
-    SEMICOLON       reduce using rule 26 (cases -> case .)
-    CASE            reduce using rule 26 (cases -> case .)
+    RPAREN          reduce using rule 24 (argument -> REGISTER .)
+    COMMA           reduce using rule 24 (argument -> REGISTER .)
 
 
 state 41
 
-    (28) case -> CASE . LPAREN condition RPAREN LBRACE primitives RBRACE
-    (29) case -> CASE . LPAREN condition COMMA condition RPAREN LBRACE primitives RBRACE
-    (30) case -> CASE . LPAREN condition COMMA condition COMMA condition RPAREN LBRACE primitives RBRACE
+    (25) argument -> INT .
 
-    LPAREN          shift and go to state 53
+    RPAREN          reduce using rule 25 (argument -> INT .)
+    COMMA           reduce using rule 25 (argument -> INT .)
 
 
 state 42
@@ -503,24 +497,24 @@ state 42
     (16) primitive -> PRIMITIVE LPAREN arguments . RPAREN SEMICOLON
     (20) arguments -> arguments . COMMA argument
 
-    RPAREN          shift and go to state 54
-    COMMA           shift and go to state 55
+    RPAREN          shift and go to state 51
+    COMMA           shift and go to state 52
 
 
 state 43
 
-    (19) arguments -> argument .
+    (23) argument -> ADDRESS .
 
-    RPAREN          reduce using rule 19 (arguments -> argument .)
-    COMMA           reduce using rule 19 (arguments -> argument .)
+    RPAREN          reduce using rule 23 (argument -> ADDRESS .)
+    COMMA           reduce using rule 23 (argument -> ADDRESS .)
 
 
 state 44
 
-    (25) argument -> INT .
+    (22) argument -> FIELD .
 
-    RPAREN          reduce using rule 25 (argument -> INT .)
-    COMMA           reduce using rule 25 (argument -> INT .)
+    RPAREN          reduce using rule 22 (argument -> FIELD .)
+    COMMA           reduce using rule 22 (argument -> FIELD .)
 
 
 state 45
@@ -533,26 +527,32 @@ state 45
 
 state 46
 
-    (23) argument -> ADDRESS .
+    (26) cases -> case .
 
-    RPAREN          reduce using rule 23 (argument -> ADDRESS .)
-    COMMA           reduce using rule 23 (argument -> ADDRESS .)
+    SEMICOLON       reduce using rule 26 (cases -> case .)
+    CASE            reduce using rule 26 (cases -> case .)
 
 
 state 47
 
-    (24) argument -> REGISTER .
+    (18) primitive -> PRIMITIVE_BRANCH COLON cases . SEMICOLON
+    (27) cases -> cases . case
+    (28) case -> . CASE LPAREN condition RPAREN LBRACE primitives RBRACE
+    (29) case -> . CASE LPAREN condition COMMA condition RPAREN LBRACE primitives RBRACE
+    (30) case -> . CASE LPAREN condition COMMA condition COMMA condition RPAREN LBRACE primitives RBRACE
 
-    RPAREN          reduce using rule 24 (argument -> REGISTER .)
-    COMMA           reduce using rule 24 (argument -> REGISTER .)
+    SEMICOLON       shift and go to state 54
+    CASE            shift and go to state 48
 
+    case                           shift and go to state 53
 
 state 48
 
-    (22) argument -> FIELD .
+    (28) case -> CASE . LPAREN condition RPAREN LBRACE primitives RBRACE
+    (29) case -> CASE . LPAREN condition COMMA condition RPAREN LBRACE primitives RBRACE
+    (30) case -> CASE . LPAREN condition COMMA condition COMMA condition RPAREN LBRACE primitives RBRACE
 
-    RPAREN          reduce using rule 22 (argument -> FIELD .)
-    COMMA           reduce using rule 22 (argument -> FIELD .)
+    LPAREN          shift and go to state 55
 
 
 state 49
@@ -571,41 +571,12 @@ state 50
 
 state 51
 
-    (18) primitive -> PRIMITIVE_BRANCH COLON cases SEMICOLON .
+    (16) primitive -> PRIMITIVE LPAREN arguments RPAREN . SEMICOLON
 
-    RBRACE          reduce using rule 18 (primitive -> PRIMITIVE_BRANCH COLON cases SEMICOLON .)
-    PRIMITIVE       reduce using rule 18 (primitive -> PRIMITIVE_BRANCH COLON cases SEMICOLON .)
-    PRIMITIVE_NO_ARG reduce using rule 18 (primitive -> PRIMITIVE_BRANCH COLON cases SEMICOLON .)
-    PRIMITIVE_BRANCH reduce using rule 18 (primitive -> PRIMITIVE_BRANCH COLON cases SEMICOLON .)
+    SEMICOLON       shift and go to state 58
 
 
 state 52
-
-    (27) cases -> cases case .
-
-    SEMICOLON       reduce using rule 27 (cases -> cases case .)
-    CASE            reduce using rule 27 (cases -> cases case .)
-
-
-state 53
-
-    (28) case -> CASE LPAREN . condition RPAREN LBRACE primitives RBRACE
-    (29) case -> CASE LPAREN . condition COMMA condition RPAREN LBRACE primitives RBRACE
-    (30) case -> CASE LPAREN . condition COMMA condition COMMA condition RPAREN LBRACE primitives RBRACE
-    (31) condition -> . LESSTHAN REGISTER COMMA INT COMMA INT MORETHAN
-
-    LESSTHAN        shift and go to state 58
-
-    condition                      shift and go to state 59
-
-state 54
-
-    (16) primitive -> PRIMITIVE LPAREN arguments RPAREN . SEMICOLON
-
-    SEMICOLON       shift and go to state 60
-
-
-state 55
 
     (20) arguments -> arguments COMMA . argument
     (21) argument -> . IDENTIFIER
@@ -615,12 +586,41 @@ state 55
     (25) argument -> . INT
 
     IDENTIFIER      shift and go to state 45
-    FIELD           shift and go to state 48
-    ADDRESS         shift and go to state 46
-    REGISTER        shift and go to state 47
-    INT             shift and go to state 44
+    FIELD           shift and go to state 44
+    ADDRESS         shift and go to state 43
+    REGISTER        shift and go to state 40
+    INT             shift and go to state 41
 
-    argument                       shift and go to state 61
+    argument                       shift and go to state 59
+
+state 53
+
+    (27) cases -> cases case .
+
+    SEMICOLON       reduce using rule 27 (cases -> cases case .)
+    CASE            reduce using rule 27 (cases -> cases case .)
+
+
+state 54
+
+    (18) primitive -> PRIMITIVE_BRANCH COLON cases SEMICOLON .
+
+    RBRACE          reduce using rule 18 (primitive -> PRIMITIVE_BRANCH COLON cases SEMICOLON .)
+    PRIMITIVE       reduce using rule 18 (primitive -> PRIMITIVE_BRANCH COLON cases SEMICOLON .)
+    PRIMITIVE_NO_ARG reduce using rule 18 (primitive -> PRIMITIVE_BRANCH COLON cases SEMICOLON .)
+    PRIMITIVE_BRANCH reduce using rule 18 (primitive -> PRIMITIVE_BRANCH COLON cases SEMICOLON .)
+
+
+state 55
+
+    (28) case -> CASE LPAREN . condition RPAREN LBRACE primitives RBRACE
+    (29) case -> CASE LPAREN . condition COMMA condition RPAREN LBRACE primitives RBRACE
+    (30) case -> CASE LPAREN . condition COMMA condition COMMA condition RPAREN LBRACE primitives RBRACE
+    (31) condition -> . LESSTHAN REGISTER COMMA INT COMMA INT MORETHAN
+
+    LESSTHAN        shift and go to state 61
+
+    condition                      shift and go to state 60
 
 state 56
 
@@ -640,23 +640,6 @@ state 57
 
 state 58
 
-    (31) condition -> LESSTHAN . REGISTER COMMA INT COMMA INT MORETHAN
-
-    REGISTER        shift and go to state 62
-
-
-state 59
-
-    (28) case -> CASE LPAREN condition . RPAREN LBRACE primitives RBRACE
-    (29) case -> CASE LPAREN condition . COMMA condition RPAREN LBRACE primitives RBRACE
-    (30) case -> CASE LPAREN condition . COMMA condition COMMA condition RPAREN LBRACE primitives RBRACE
-
-    RPAREN          shift and go to state 63
-    COMMA           shift and go to state 64
-
-
-state 60
-
     (16) primitive -> PRIMITIVE LPAREN arguments RPAREN SEMICOLON .
 
     RBRACE          reduce using rule 16 (primitive -> PRIMITIVE LPAREN arguments RPAREN SEMICOLON .)
@@ -665,7 +648,7 @@ state 60
     PRIMITIVE_BRANCH reduce using rule 16 (primitive -> PRIMITIVE LPAREN arguments RPAREN SEMICOLON .)
 
 
-state 61
+state 59
 
     (20) arguments -> arguments COMMA argument .
 
@@ -673,12 +656,32 @@ state 61
     COMMA           reduce using rule 20 (arguments -> arguments COMMA argument .)
 
 
+state 60
+
+    (28) case -> CASE LPAREN condition . RPAREN LBRACE primitives RBRACE
+    (29) case -> CASE LPAREN condition . COMMA condition RPAREN LBRACE primitives RBRACE
+    (30) case -> CASE LPAREN condition . COMMA condition COMMA condition RPAREN LBRACE primitives RBRACE
+
+    RPAREN          shift and go to state 63
+    COMMA           shift and go to state 62
+
+
+state 61
+
+    (31) condition -> LESSTHAN . REGISTER COMMA INT COMMA INT MORETHAN
+
+    REGISTER        shift and go to state 64
+
+
 state 62
 
-    (31) condition -> LESSTHAN REGISTER . COMMA INT COMMA INT MORETHAN
+    (29) case -> CASE LPAREN condition COMMA . condition RPAREN LBRACE primitives RBRACE
+    (30) case -> CASE LPAREN condition COMMA . condition COMMA condition RPAREN LBRACE primitives RBRACE
+    (31) condition -> . LESSTHAN REGISTER COMMA INT COMMA INT MORETHAN
 
-    COMMA           shift and go to state 65
+    LESSTHAN        shift and go to state 61
 
+    condition                      shift and go to state 65
 
 state 63
 
@@ -689,19 +692,18 @@ state 63
 
 state 64
 
-    (29) case -> CASE LPAREN condition COMMA . condition RPAREN LBRACE primitives RBRACE
-    (30) case -> CASE LPAREN condition COMMA . condition COMMA condition RPAREN LBRACE primitives RBRACE
-    (31) condition -> . LESSTHAN REGISTER COMMA INT COMMA INT MORETHAN
+    (31) condition -> LESSTHAN REGISTER . COMMA INT COMMA INT MORETHAN
 
-    LESSTHAN        shift and go to state 58
+    COMMA           shift and go to state 67
 
-    condition                      shift and go to state 67
 
 state 65
 
-    (31) condition -> LESSTHAN REGISTER COMMA . INT COMMA INT MORETHAN
+    (29) case -> CASE LPAREN condition COMMA condition . RPAREN LBRACE primitives RBRACE
+    (30) case -> CASE LPAREN condition COMMA condition . COMMA condition RPAREN LBRACE primitives RBRACE
 
-    INT             shift and go to state 68
+    RPAREN          shift and go to state 69
+    COMMA           shift and go to state 68
 
 
 state 66
@@ -713,30 +715,37 @@ state 66
     (17) primitive -> . PRIMITIVE_NO_ARG SEMICOLON
     (18) primitive -> . PRIMITIVE_BRANCH COLON cases SEMICOLON
 
-    PRIMITIVE       shift and go to state 29
-    PRIMITIVE_NO_ARG shift and go to state 28
-    PRIMITIVE_BRANCH shift and go to state 27
+    PRIMITIVE       shift and go to state 25
+    PRIMITIVE_NO_ARG shift and go to state 29
+    PRIMITIVE_BRANCH shift and go to state 28
 
-    primitive                      shift and go to state 25
-    primitives                     shift and go to state 69
+    primitive                      shift and go to state 26
+    primitives                     shift and go to state 70
 
 state 67
 
-    (29) case -> CASE LPAREN condition COMMA condition . RPAREN LBRACE primitives RBRACE
-    (30) case -> CASE LPAREN condition COMMA condition . COMMA condition RPAREN LBRACE primitives RBRACE
+    (31) condition -> LESSTHAN REGISTER COMMA . INT COMMA INT MORETHAN
 
-    RPAREN          shift and go to state 70
-    COMMA           shift and go to state 71
+    INT             shift and go to state 71
 
 
 state 68
 
-    (31) condition -> LESSTHAN REGISTER COMMA INT . COMMA INT MORETHAN
+    (30) case -> CASE LPAREN condition COMMA condition COMMA . condition RPAREN LBRACE primitives RBRACE
+    (31) condition -> . LESSTHAN REGISTER COMMA INT COMMA INT MORETHAN
 
-    COMMA           shift and go to state 72
+    LESSTHAN        shift and go to state 61
 
+    condition                      shift and go to state 72
 
 state 69
+
+    (29) case -> CASE LPAREN condition COMMA condition RPAREN . LBRACE primitives RBRACE
+
+    LBRACE          shift and go to state 73
+
+
+state 70
 
     (28) case -> CASE LPAREN condition RPAREN LBRACE primitives . RBRACE
     (15) primitives -> primitives . primitive
@@ -744,45 +753,28 @@ state 69
     (17) primitive -> . PRIMITIVE_NO_ARG SEMICOLON
     (18) primitive -> . PRIMITIVE_BRANCH COLON cases SEMICOLON
 
-    RBRACE          shift and go to state 73
-    PRIMITIVE       shift and go to state 29
-    PRIMITIVE_NO_ARG shift and go to state 28
-    PRIMITIVE_BRANCH shift and go to state 27
+    RBRACE          shift and go to state 74
+    PRIMITIVE       shift and go to state 25
+    PRIMITIVE_NO_ARG shift and go to state 29
+    PRIMITIVE_BRANCH shift and go to state 28
 
-    primitive                      shift and go to state 32
-
-state 70
-
-    (29) case -> CASE LPAREN condition COMMA condition RPAREN . LBRACE primitives RBRACE
-
-    LBRACE          shift and go to state 74
-
+    primitive                      shift and go to state 34
 
 state 71
 
-    (30) case -> CASE LPAREN condition COMMA condition COMMA . condition RPAREN LBRACE primitives RBRACE
-    (31) condition -> . LESSTHAN REGISTER COMMA INT COMMA INT MORETHAN
+    (31) condition -> LESSTHAN REGISTER COMMA INT . COMMA INT MORETHAN
 
-    LESSTHAN        shift and go to state 58
+    COMMA           shift and go to state 75
 
-    condition                      shift and go to state 75
 
 state 72
 
-    (31) condition -> LESSTHAN REGISTER COMMA INT COMMA . INT MORETHAN
+    (30) case -> CASE LPAREN condition COMMA condition COMMA condition . RPAREN LBRACE primitives RBRACE
 
-    INT             shift and go to state 76
+    RPAREN          shift and go to state 76
 
 
 state 73
-
-    (28) case -> CASE LPAREN condition RPAREN LBRACE primitives RBRACE .
-
-    SEMICOLON       reduce using rule 28 (case -> CASE LPAREN condition RPAREN LBRACE primitives RBRACE .)
-    CASE            reduce using rule 28 (case -> CASE LPAREN condition RPAREN LBRACE primitives RBRACE .)
-
-
-state 74
 
     (29) case -> CASE LPAREN condition COMMA condition RPAREN LBRACE . primitives RBRACE
     (14) primitives -> . primitive
@@ -791,25 +783,33 @@ state 74
     (17) primitive -> . PRIMITIVE_NO_ARG SEMICOLON
     (18) primitive -> . PRIMITIVE_BRANCH COLON cases SEMICOLON
 
-    PRIMITIVE       shift and go to state 29
-    PRIMITIVE_NO_ARG shift and go to state 28
-    PRIMITIVE_BRANCH shift and go to state 27
+    PRIMITIVE       shift and go to state 25
+    PRIMITIVE_NO_ARG shift and go to state 29
+    PRIMITIVE_BRANCH shift and go to state 28
 
-    primitive                      shift and go to state 25
+    primitive                      shift and go to state 26
     primitives                     shift and go to state 77
+
+state 74
+
+    (28) case -> CASE LPAREN condition RPAREN LBRACE primitives RBRACE .
+
+    SEMICOLON       reduce using rule 28 (case -> CASE LPAREN condition RPAREN LBRACE primitives RBRACE .)
+    CASE            reduce using rule 28 (case -> CASE LPAREN condition RPAREN LBRACE primitives RBRACE .)
+
 
 state 75
 
-    (30) case -> CASE LPAREN condition COMMA condition COMMA condition . RPAREN LBRACE primitives RBRACE
+    (31) condition -> LESSTHAN REGISTER COMMA INT COMMA . INT MORETHAN
 
-    RPAREN          shift and go to state 78
+    INT             shift and go to state 78
 
 
 state 76
 
-    (31) condition -> LESSTHAN REGISTER COMMA INT COMMA INT . MORETHAN
+    (30) case -> CASE LPAREN condition COMMA condition COMMA condition RPAREN . LBRACE primitives RBRACE
 
-    MORETHAN        shift and go to state 79
+    LBRACE          shift and go to state 79
 
 
 state 77
@@ -821,26 +821,34 @@ state 77
     (18) primitive -> . PRIMITIVE_BRANCH COLON cases SEMICOLON
 
     RBRACE          shift and go to state 80
-    PRIMITIVE       shift and go to state 29
-    PRIMITIVE_NO_ARG shift and go to state 28
-    PRIMITIVE_BRANCH shift and go to state 27
+    PRIMITIVE       shift and go to state 25
+    PRIMITIVE_NO_ARG shift and go to state 29
+    PRIMITIVE_BRANCH shift and go to state 28
 
-    primitive                      shift and go to state 32
+    primitive                      shift and go to state 34
 
 state 78
 
-    (30) case -> CASE LPAREN condition COMMA condition COMMA condition RPAREN . LBRACE primitives RBRACE
+    (31) condition -> LESSTHAN REGISTER COMMA INT COMMA INT . MORETHAN
 
-    LBRACE          shift and go to state 81
+    MORETHAN        shift and go to state 81
 
 
 state 79
 
-    (31) condition -> LESSTHAN REGISTER COMMA INT COMMA INT MORETHAN .
+    (30) case -> CASE LPAREN condition COMMA condition COMMA condition RPAREN LBRACE . primitives RBRACE
+    (14) primitives -> . primitive
+    (15) primitives -> . primitives primitive
+    (16) primitive -> . PRIMITIVE LPAREN arguments RPAREN SEMICOLON
+    (17) primitive -> . PRIMITIVE_NO_ARG SEMICOLON
+    (18) primitive -> . PRIMITIVE_BRANCH COLON cases SEMICOLON
 
-    RPAREN          reduce using rule 31 (condition -> LESSTHAN REGISTER COMMA INT COMMA INT MORETHAN .)
-    COMMA           reduce using rule 31 (condition -> LESSTHAN REGISTER COMMA INT COMMA INT MORETHAN .)
+    PRIMITIVE       shift and go to state 25
+    PRIMITIVE_NO_ARG shift and go to state 29
+    PRIMITIVE_BRANCH shift and go to state 28
 
+    primitive                      shift and go to state 26
+    primitives                     shift and go to state 82
 
 state 80
 
@@ -852,19 +860,11 @@ state 80
 
 state 81
 
-    (30) case -> CASE LPAREN condition COMMA condition COMMA condition RPAREN LBRACE . primitives RBRACE
-    (14) primitives -> . primitive
-    (15) primitives -> . primitives primitive
-    (16) primitive -> . PRIMITIVE LPAREN arguments RPAREN SEMICOLON
-    (17) primitive -> . PRIMITIVE_NO_ARG SEMICOLON
-    (18) primitive -> . PRIMITIVE_BRANCH COLON cases SEMICOLON
+    (31) condition -> LESSTHAN REGISTER COMMA INT COMMA INT MORETHAN .
 
-    PRIMITIVE       shift and go to state 29
-    PRIMITIVE_NO_ARG shift and go to state 28
-    PRIMITIVE_BRANCH shift and go to state 27
+    RPAREN          reduce using rule 31 (condition -> LESSTHAN REGISTER COMMA INT COMMA INT MORETHAN .)
+    COMMA           reduce using rule 31 (condition -> LESSTHAN REGISTER COMMA INT COMMA INT MORETHAN .)
 
-    primitive                      shift and go to state 25
-    primitives                     shift and go to state 82
 
 state 82
 
@@ -875,11 +875,11 @@ state 82
     (18) primitive -> . PRIMITIVE_BRANCH COLON cases SEMICOLON
 
     RBRACE          shift and go to state 83
-    PRIMITIVE       shift and go to state 29
-    PRIMITIVE_NO_ARG shift and go to state 28
-    PRIMITIVE_BRANCH shift and go to state 27
+    PRIMITIVE       shift and go to state 25
+    PRIMITIVE_NO_ARG shift and go to state 29
+    PRIMITIVE_BRANCH shift and go to state 28
 
-    primitive                      shift and go to state 32
+    primitive                      shift and go to state 34
 
 state 83
 
@@ -892,5 +892,5 @@ WARNING:
 WARNING: Conflicts:
 WARNING: 
 WARNING: shift/reduce conflict for ANNOTATION in state 0 resolved as shift
-WARNING: shift/reduce conflict for ANNOTATION in state 5 resolved as shift
-WARNING: shift/reduce conflict for PROGRAM in state 5 resolved as shift
+WARNING: shift/reduce conflict for ANNOTATION in state 2 resolved as shift
+WARNING: shift/reduce conflict for PROGRAM in state 2 resolved as shift

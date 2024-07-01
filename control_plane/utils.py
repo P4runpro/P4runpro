@@ -208,7 +208,7 @@ def get_supportive_reg(reg_name_ls):
     return None
 
 def type_check(type_list, check_list):
-    if len(type_list) != len(type_check):
+    if len(type_list) != len(check_list):
         return False
     for i in range(len(type_list)):
         if type_list[i] != check_list[i]:

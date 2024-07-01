@@ -1,145 +1,9 @@
-//Control block in ingress and egress pipeline
+//RPB in ingress and egress pipeline
 #include "../config.h"
 
 #ifndef _RUNPROBLOCK_
 #define _RUNPROBLOCK_
 
-control InitializationBlock(
-        inout header_t hdr,
-        inout ig_metadata_t ig_md,
-        in ingress_intrinsic_metadata_t ig_intr_md,
-        in ingress_intrinsic_metadata_from_parser_t ig_intr_prsr_md,
-        inout ingress_intrinsic_metadata_for_deparser_t ig_intr_dprsr_md,
-        inout ingress_intrinsic_metadata_for_tm_t ig_intr_tm_md) {
-        
-        action forward(bit<9> port)  {
-            //ig_intr_tm_md.ucast_egress_port = port;
-            hdr.meta.rec.egress_port = port;
-        }
-
-        action set_flow_id(bit<16> flow_id) {
-            hdr.meta.id.flow_id = flow_id;
-        }
-
-        @pragma stage 0
-        table tb_forward {
-            key = {
-                ig_intr_md.ingress_port : exact;
-            }
-            actions = {
-                forward;
-                NoAction;
-            }
-            default_action = NoAction;
-            size = 512;
-        }
-
-        @pragma stage 0
-        table tb_flow_filter1 {
-            key = {
-                hdr.ethernet.dst : ternary;
-                hdr.ethernet.src : ternary;
-                hdr.ethernet.ether_type: ternary;
-            }
-            actions = {
-                set_flow_id;
-                NoAction;
-            }
-            default_action = NoAction();
-            size = 512;
-        }
-
-        @pragma stage 0
-        table tb_flow_filter2 {
-            key = {
-                hdr.ipv4.src : ternary;
-                hdr.ipv4.dst : ternary;
-                hdr.ipv4.protocol : ternary;
-                hdr.l4_port.src_port : ternary;
-                hdr.l4_port.dst_port : ternary;
-            }
-            actions = {
-                set_flow_id;
-                NoAction;
-            }
-            default_action = NoAction();
-            size = 512;
-        }
-
-        @pragma stage 0
-        table tb_flow_filter3 {
-            key = {
-                hdr.tunnel.dst_id : ternary;
-            }
-            actions = {
-                set_flow_id;
-                NoAction;
-            }
-            default_action = NoAction();
-            size = 512;
-        }
-
-        apply {
-            tb_forward.apply();
-            if(ig_md.bitmap[BITWIDTH_L3] == 0) { //an L2 packet
-                tb_flow_filter1.apply();
-            } else if(ig_md.bitmap[BITWIDTH_L4] > 0) { //L4 packet
-                tb_flow_filter2.apply();
-            } else if(ig_md.bitmap[BITWIDTH_L3] == 1) { //tunnel
-                tb_flow_filter3.apply();
-            }
-        }
-}
-
-control RecirculationBlock(
-        inout header_t hdr,
-        inout ig_metadata_t ig_md,
-        in ingress_intrinsic_metadata_t ig_intr_md,
-        in ingress_intrinsic_metadata_from_parser_t ig_intr_prsr_md,
-        inout ingress_intrinsic_metadata_for_deparser_t ig_intr_dprsr_md,
-        inout ingress_intrinsic_metadata_for_tm_t ig_intr_tm_md) {
-
-        action first_recirculate() {
-            //hdr.meta.rec.egress_port = ig_intr_tm_md.ucast_egress_port;
-            hdr.meta.rec.recirculation_flag = 1;
-            ig_intr_tm_md.ucast_egress_port = PORT_RECIRCULATION;
-        }
-
-        action middle_recirculate() {
-            ig_intr_tm_md.ucast_egress_port = PORT_RECIRCULATION;
-        }
-
-        action last_recirculate() {
-            ig_intr_tm_md.ucast_egress_port = hdr.meta.rec.egress_port;
-            hdr.meta.rec.recirculation_flag = 0;
-        }
-
-        action set_egress_port() {
-            ig_intr_tm_md.ucast_egress_port = hdr.meta.rec.egress_port;
-
-        }
-
-        @pragma stage 11
-        table tb_recirculation {
-            key = {
-                hdr.meta.id.flow_id : exact;
-                hdr.meta.rec.iterations : exact;
-            }            
-            actions = {
-                first_recirculate;
-                middle_recirculate;
-                last_recirculate;
-                set_egress_port;
-            }
-            default_action = set_egress_port();
-            size = 2048;
-        }
-        apply {
-            if(hdr.meta.isValid()) {
-                tb_recirculation.apply();
-            }
-        }
-}
 
 control IngressRPB1(
         inout header_t hdr,
@@ -193,7 +57,7 @@ control IngressRPB1(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x18005,
             reversed    = true,
@@ -272,6 +136,7 @@ control IngressRPB1(
         }
 
         //action for header interaction
+
         action extract_hdrl5op_har() {
             hdr.meta.reg.har = hdr.l5.op;
         }
@@ -292,8 +157,16 @@ control IngressRPB1(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -511,6 +384,8 @@ control IngressRPB1(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -528,7 +403,9 @@ control IngressRPB1(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -642,7 +519,7 @@ control IngressRPB2(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x18005,
             reversed    = false,
@@ -721,6 +598,7 @@ control IngressRPB2(
         }
 
         //action for header interaction
+
         action extract_hdrl5op_har() {
             hdr.meta.reg.har = hdr.l5.op;
         }
@@ -741,8 +619,16 @@ control IngressRPB2(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -960,6 +846,8 @@ control IngressRPB2(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -977,7 +865,9 @@ control IngressRPB2(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -1091,7 +981,7 @@ control IngressRPB3(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x18005,
             reversed    = false,
@@ -1170,6 +1060,7 @@ control IngressRPB3(
         }
 
         //action for header interaction
+
         action extract_hdrl5op_har() {
             hdr.meta.reg.har = hdr.l5.op;
         }
@@ -1190,8 +1081,16 @@ control IngressRPB3(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -1409,6 +1308,8 @@ control IngressRPB3(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -1426,7 +1327,9 @@ control IngressRPB3(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -1540,7 +1443,7 @@ control IngressRPB4(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x10589,
             reversed    = false,
@@ -1619,6 +1522,7 @@ control IngressRPB4(
         }
 
         //action for header interaction
+
         action extract_hdrl5op_har() {
             hdr.meta.reg.har = hdr.l5.op;
         }
@@ -1639,8 +1543,16 @@ control IngressRPB4(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -1858,6 +1770,8 @@ control IngressRPB4(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -1875,7 +1789,9 @@ control IngressRPB4(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -1989,7 +1905,7 @@ control IngressRPB5(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x13D65,
             reversed    = true,
@@ -2068,6 +1984,7 @@ control IngressRPB5(
         }
 
         //action for header interaction
+
         action extract_hdrl5op_har() {
             hdr.meta.reg.har = hdr.l5.op;
         }
@@ -2088,8 +2005,16 @@ control IngressRPB5(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -2307,6 +2232,8 @@ control IngressRPB5(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -2324,7 +2251,9 @@ control IngressRPB5(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -2438,7 +2367,7 @@ control IngressRPB6(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x13D65,
             reversed    = false,
@@ -2517,6 +2446,7 @@ control IngressRPB6(
         }
 
         //action for header interaction
+
         action extract_hdrl5op_har() {
             hdr.meta.reg.har = hdr.l5.op;
         }
@@ -2537,8 +2467,16 @@ control IngressRPB6(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -2756,6 +2694,8 @@ control IngressRPB6(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -2773,7 +2713,9 @@ control IngressRPB6(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -2887,7 +2829,7 @@ control IngressRPB7(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x11021,
             reversed    = false,
@@ -2966,6 +2908,7 @@ control IngressRPB7(
         }
 
         //action for header interaction
+
         action extract_hdrl5op_har() {
             hdr.meta.reg.har = hdr.l5.op;
         }
@@ -2986,8 +2929,16 @@ control IngressRPB7(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -3205,6 +3156,8 @@ control IngressRPB7(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -3222,7 +3175,9 @@ control IngressRPB7(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -3336,7 +3291,7 @@ control IngressRPB8(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x18005,
             reversed    = true,
@@ -3415,6 +3370,7 @@ control IngressRPB8(
         }
 
         //action for header interaction
+
         action extract_hdrl5op_har() {
             hdr.meta.reg.har = hdr.l5.op;
         }
@@ -3435,8 +3391,16 @@ control IngressRPB8(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -3654,6 +3618,8 @@ control IngressRPB8(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -3671,7 +3637,9 @@ control IngressRPB8(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -3785,7 +3753,7 @@ control IngressRPB9(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x11021,
             reversed    = true,
@@ -3864,6 +3832,7 @@ control IngressRPB9(
         }
 
         //action for header interaction
+
         action extract_hdrl5op_har() {
             hdr.meta.reg.har = hdr.l5.op;
         }
@@ -3884,8 +3853,16 @@ control IngressRPB9(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -4103,6 +4080,8 @@ control IngressRPB9(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -4120,7 +4099,9 @@ control IngressRPB9(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -4234,7 +4215,7 @@ control IngressRPB10(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x11021,
             reversed    = true,
@@ -4313,6 +4294,7 @@ control IngressRPB10(
         }
 
         //action for header interaction
+
         action extract_hdrl5op_har() {
             hdr.meta.reg.har = hdr.l5.op;
         }
@@ -4333,8 +4315,16 @@ control IngressRPB10(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -4552,6 +4542,8 @@ control IngressRPB10(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -4569,7 +4561,9 @@ control IngressRPB10(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -4683,7 +4677,7 @@ control EgressRPB11(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x18BB7,
             reversed    = false,
@@ -4740,6 +4734,7 @@ control EgressRPB11(
         action extract_egintrmddeqtimedelta_har() {
             hdr.meta.reg.har = (bit<32>)eg_intr_md.deq_timedelta;
         }
+
         action modify_hdripv4ecn_sar() {
             hdr.ipv4.ecn = (bit<2>)hdr.meta.reg.sar;
         }
@@ -4764,8 +4759,16 @@ control EgressRPB11(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -4983,6 +4986,8 @@ control EgressRPB11(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -5002,7 +5007,9 @@ control EgressRPB11(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -5112,7 +5119,7 @@ control EgressRPB12(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x1A097,
             reversed    = false,
@@ -5169,6 +5176,7 @@ control EgressRPB12(
         action extract_egintrmddeqtimedelta_har() {
             hdr.meta.reg.har = (bit<32>)eg_intr_md.deq_timedelta;
         }
+
         action modify_hdripv4ecn_sar() {
             hdr.ipv4.ecn = (bit<2>)hdr.meta.reg.sar;
         }
@@ -5193,8 +5201,16 @@ control EgressRPB12(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -5412,6 +5428,8 @@ control EgressRPB12(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -5431,7 +5449,9 @@ control EgressRPB12(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -5541,7 +5561,7 @@ control EgressRPB13(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x18005,
             reversed    = true,
@@ -5598,6 +5618,7 @@ control EgressRPB13(
         action extract_egintrmddeqtimedelta_har() {
             hdr.meta.reg.har = (bit<32>)eg_intr_md.deq_timedelta;
         }
+
         action modify_hdripv4ecn_sar() {
             hdr.ipv4.ecn = (bit<2>)hdr.meta.reg.sar;
         }
@@ -5622,8 +5643,16 @@ control EgressRPB13(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -5841,6 +5870,8 @@ control EgressRPB13(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -5860,7 +5891,9 @@ control EgressRPB13(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -5970,7 +6003,7 @@ control EgressRPB14(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x11021,
             reversed    = true,
@@ -6027,6 +6060,7 @@ control EgressRPB14(
         action extract_egintrmddeqtimedelta_har() {
             hdr.meta.reg.har = (bit<32>)eg_intr_md.deq_timedelta;
         }
+
         action modify_hdripv4ecn_sar() {
             hdr.ipv4.ecn = (bit<2>)hdr.meta.reg.sar;
         }
@@ -6051,8 +6085,16 @@ control EgressRPB14(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -6270,6 +6312,8 @@ control EgressRPB14(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -6289,7 +6333,9 @@ control EgressRPB14(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -6399,7 +6445,7 @@ control EgressRPB15(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x11021,
             reversed    = false,
@@ -6456,6 +6502,7 @@ control EgressRPB15(
         action extract_egintrmddeqtimedelta_har() {
             hdr.meta.reg.har = (bit<32>)eg_intr_md.deq_timedelta;
         }
+
         action modify_hdripv4ecn_sar() {
             hdr.ipv4.ecn = (bit<2>)hdr.meta.reg.sar;
         }
@@ -6480,8 +6527,16 @@ control EgressRPB15(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -6699,6 +6754,8 @@ control EgressRPB15(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -6718,7 +6775,9 @@ control EgressRPB15(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -6828,7 +6887,7 @@ control EgressRPB16(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x18005,
             reversed    = true,
@@ -6885,6 +6944,7 @@ control EgressRPB16(
         action extract_egintrmddeqtimedelta_har() {
             hdr.meta.reg.har = (bit<32>)eg_intr_md.deq_timedelta;
         }
+
         action modify_hdripv4ecn_sar() {
             hdr.ipv4.ecn = (bit<2>)hdr.meta.reg.sar;
         }
@@ -6909,8 +6969,16 @@ control EgressRPB16(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -7128,6 +7196,8 @@ control EgressRPB16(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -7147,7 +7217,9 @@ control EgressRPB16(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -7257,7 +7329,7 @@ control EgressRPB17(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x11021,
             reversed    = true,
@@ -7314,6 +7386,7 @@ control EgressRPB17(
         action extract_egintrmddeqtimedelta_har() {
             hdr.meta.reg.har = (bit<32>)eg_intr_md.deq_timedelta;
         }
+
         action modify_hdripv4ecn_sar() {
             hdr.ipv4.ecn = (bit<2>)hdr.meta.reg.sar;
         }
@@ -7338,8 +7411,16 @@ control EgressRPB17(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -7557,6 +7638,8 @@ control EgressRPB17(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -7576,7 +7659,9 @@ control EgressRPB17(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -7686,7 +7771,7 @@ control EgressRPB18(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x11021,
             reversed    = false,
@@ -7743,6 +7828,7 @@ control EgressRPB18(
         action extract_egintrmddeqtimedelta_har() {
             hdr.meta.reg.har = (bit<32>)eg_intr_md.deq_timedelta;
         }
+
         action modify_hdripv4ecn_sar() {
             hdr.ipv4.ecn = (bit<2>)hdr.meta.reg.sar;
         }
@@ -7767,8 +7853,16 @@ control EgressRPB18(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -7986,6 +8080,8 @@ control EgressRPB18(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -8005,7 +8101,9 @@ control EgressRPB18(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -8115,7 +8213,7 @@ control EgressRPB19(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x11021,
             reversed    = false,
@@ -8172,6 +8270,7 @@ control EgressRPB19(
         action extract_egintrmddeqtimedelta_har() {
             hdr.meta.reg.har = (bit<32>)eg_intr_md.deq_timedelta;
         }
+
         action modify_hdripv4ecn_sar() {
             hdr.ipv4.ecn = (bit<2>)hdr.meta.reg.sar;
         }
@@ -8196,8 +8295,16 @@ control EgressRPB19(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -8415,6 +8522,8 @@ control EgressRPB19(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -8434,7 +8543,9 @@ control EgressRPB19(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -8544,7 +8655,7 @@ control EgressRPB20(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x1C867,
             reversed    = false,
@@ -8601,6 +8712,7 @@ control EgressRPB20(
         action extract_egintrmddeqtimedelta_har() {
             hdr.meta.reg.har = (bit<32>)eg_intr_md.deq_timedelta;
         }
+
         action modify_hdripv4ecn_sar() {
             hdr.ipv4.ecn = (bit<2>)hdr.meta.reg.sar;
         }
@@ -8625,8 +8737,16 @@ control EgressRPB20(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -8844,6 +8964,8 @@ control EgressRPB20(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -8863,7 +8985,9 @@ control EgressRPB20(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -8973,7 +9097,7 @@ control EgressRPB21(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x11021,
             reversed    = true,
@@ -9030,6 +9154,7 @@ control EgressRPB21(
         action extract_egintrmddeqtimedelta_har() {
             hdr.meta.reg.har = (bit<32>)eg_intr_md.deq_timedelta;
         }
+
         action modify_hdripv4ecn_sar() {
             hdr.ipv4.ecn = (bit<2>)hdr.meta.reg.sar;
         }
@@ -9054,8 +9179,16 @@ control EgressRPB21(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -9273,6 +9406,8 @@ control EgressRPB21(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -9292,7 +9427,9 @@ control EgressRPB21(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -9402,7 +9539,7 @@ control EgressRPB22(
             }
         };
         
-        //CRC hash polynomial which need to be different in each stage
+        //CRC hash polynomial which need to be different in every stage
         CRCPolynomial<bit<16>>(
             coeff       = 0x11021,
             reversed    = true,
@@ -9459,6 +9596,7 @@ control EgressRPB22(
         action extract_egintrmddeqtimedelta_har() {
             hdr.meta.reg.har = (bit<32>)eg_intr_md.deq_timedelta;
         }
+
         action modify_hdripv4ecn_sar() {
             hdr.ipv4.ecn = (bit<2>)hdr.meta.reg.sar;
         }
@@ -9483,8 +9621,16 @@ control EgressRPB22(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -9702,6 +9848,8 @@ control EgressRPB22(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -9721,7 +9869,9 @@ control EgressRPB22(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -9779,7 +9929,5 @@ control EgressRPB22(
             }
         }
 }
-
-
 
 #endif

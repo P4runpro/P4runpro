@@ -1,0 +1,186 @@
+@ mem1 1024
+@ mem_cms_row1 1024
+@ mem_cms_row2 1024
+@ mem_bf_row1 1024
+@ mem_bf_row2 1024
+program netcache(<hdr.udp.dst_port, 7777, 0xffff>) {
+	EXTRACT(hdr.l5.op, har);
+	EXTRACT(hdr.l5.key1, sar);
+	EXTRACT(hdr.l5.key2, mar);
+	BRANCH:
+	case(<sar, 1, 0xffffffff>,
+		<har, 0x00000000, 0xffffffff>,
+		<mar, 0x00008888, 0xffffffff>
+	) {
+		RETURN;
+		LOADI(mar, 123);
+		MEMREAD(mem1);
+		MODIFY(hdr.l5.key2, sar);
+	}
+	case(<sar, 2, 0xffffffff>,
+		<har, 0x00000000, 0xffffffff>,
+		<mar, 0x00008888, 0xffffffff>
+	) {
+		DROP;
+		LOADI(mar, 123);
+		EXTRACT(hdr.l5.key3, sar);
+		MEMWRITE(mem1);
+	}
+    case(<sar, 1, 0xffffffff>,
+		<har, 0x00000000, 0xffffffff>,
+		<mar, 0x00008888, 0xffffffff>
+	) {
+		RETURN;
+		LOADI(mar, 123);
+		MEMREAD(mem1);
+		MODIFY(hdr.l5.key2, sar);
+	}
+	case(<sar, 2, 0xffffffff>,
+		<har, 0x00000000, 0xffffffff>,
+		<mar, 0x00008888, 0xffffffff>
+	) {
+		DROP;
+		LOADI(mar, 123);
+		EXTRACT(hdr.l5.key3, sar);
+		MEMWRITE(mem1);
+	}
+    case(<sar, 1, 0xffffffff>,
+		<har, 0x00000000, 0xffffffff>,
+		<mar, 0x00008888, 0xffffffff>
+	) {
+		RETURN;
+		LOADI(mar, 123);
+		MEMREAD(mem1);
+		MODIFY(hdr.l5.key2, sar);
+	}
+	case(<sar, 2, 0xffffffff>,
+		<har, 0x00000000, 0xffffffff>,
+		<mar, 0x00008888, 0xffffffff>
+	) {
+		DROP;
+		LOADI(mar, 123);
+		EXTRACT(hdr.l5.key3, sar);
+		MEMWRITE(mem1);
+	}
+    case(<sar, 1, 0xffffffff>,
+		<har, 0x00000000, 0xffffffff>,
+		<mar, 0x00008888, 0xffffffff>
+	) {
+		RETURN;
+		LOADI(mar, 123);
+		MEMREAD(mem1);
+		MODIFY(hdr.l5.key2, sar);
+	}
+	case(<sar, 2, 0xffffffff>,
+		<har, 0x00000000, 0xffffffff>,
+		<mar, 0x00008888, 0xffffffff>
+	) {
+		DROP;
+		LOADI(mar, 123);
+		EXTRACT(hdr.l5.key3, sar);
+		MEMWRITE(mem1);
+	}
+    case(<sar, 1, 0xffffffff>,
+		<har, 0x00000000, 0xffffffff>,
+		<mar, 0x00008888, 0xffffffff>
+	) {
+		RETURN;
+		LOADI(mar, 123);
+		MEMREAD(mem1);
+		MODIFY(hdr.l5.key2, sar);
+	}
+	case(<sar, 2, 0xffffffff>,
+		<har, 0x00000000, 0xffffffff>,
+		<mar, 0x00008888, 0xffffffff>
+	) {
+		DROP;
+		LOADI(mar, 123);
+		EXTRACT(hdr.l5.key3, sar);
+		MEMWRITE(mem1);
+	}
+    case(<sar, 1, 0xffffffff>,
+		<har, 0x00000000, 0xffffffff>,
+		<mar, 0x00008888, 0xffffffff>
+	) {
+		RETURN;
+		LOADI(mar, 123);
+		MEMREAD(mem1);
+		MODIFY(hdr.l5.key2, sar);
+	}
+	case(<sar, 2, 0xffffffff>,
+		<har, 0x00000000, 0xffffffff>,
+		<mar, 0x00008888, 0xffffffff>
+	) {
+		DROP;
+		LOADI(mar, 123);
+		EXTRACT(hdr.l5.key3, sar);
+		MEMWRITE(mem1);
+	}
+    case(<sar, 1, 0xffffffff>,
+		<har, 0x00000000, 0xffffffff>,
+		<mar, 0x00008888, 0xffffffff>
+	) {
+		RETURN;
+		LOADI(mar, 123);
+		MEMREAD(mem1);
+		MODIFY(hdr.l5.key2, sar);
+	}
+	case(<sar, 2, 0xffffffff>,
+		<har, 0x00000000, 0xffffffff>,
+		<mar, 0x00008888, 0xffffffff>
+	) {
+		DROP;
+		LOADI(mar, 123);
+		EXTRACT(hdr.l5.key3, sar);
+		MEMWRITE(mem1);
+	}
+    case(<sar, 1, 0xffffffff>,
+		<har, 0x00000000, 0xffffffff>,
+		<mar, 0x00008888, 0xffffffff>
+	) {
+		RETURN;
+		LOADI(mar, 123);
+		MEMREAD(mem1);
+		MODIFY(hdr.l5.key2, sar);
+	}
+	case(<sar, 2, 0xffffffff>,
+		<har, 0x00000000, 0xffffffff>,
+		<mar, 0x00008888, 0xffffffff>
+	) {
+		DROP;
+		LOADI(mar, 123);
+		EXTRACT(hdr.l5.key3, sar);
+		MEMWRITE(mem1);
+	};
+	FORWARD(32);
+    LOADI(sar, 1);
+    HASH_5_TUPLE_MEM(mem_cms_row1);
+    MEMADD(mem_cms_row1);
+    LOADI(har, 1024);
+    MIN(har, sar);
+    LOADI(sar, 1);
+    HASH_5_TUPLE_MEM(mem_cms_row2);
+    MEMADD(mem_cms_row2);
+    MIN(har, sar);
+    BRANCH:
+    case(<har, 1024, 0xffffffff>) {
+        LOADI(sar, 1);
+        HASH_5_TUPLE_MEM(mem_bf_row1);
+        MEMOR(mem_bf_row1);
+        BRANCH:
+        case(<sar, 1, 0xffffffff>) {
+            HASH_5_TUPLE_MEM(mem_bf_row2);
+            MEMOR(mem_bf_row2);
+            BRANCH:
+            case(<sar, 0, 0xffffffff>) {
+                REPORT;
+            };
+        }
+        case(<sar, 0, 0xffffffff>) {
+            LOADI(sar, 1);
+            HASH_5_TUPLE_MEM(mem_bf_row2);
+            MEMOR(mem_bf_row2);
+            REPORT;
+        };
+    };
+}

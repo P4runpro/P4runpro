@@ -1,4 +1,4 @@
-program ecn(<hdr.ipv4.src, 0, 0>) {
+program ecn(<hdr.ipv4.src, 3.0.0.0, 0xffffff00>) {
     NOP;
     NOP;
     NOP;

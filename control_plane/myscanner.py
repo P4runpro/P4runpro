@@ -104,7 +104,7 @@ def t_error(t):
     t.lexer.skip(1)
 
 
-lexer = lex.lex(optimzie=1)
+lexer = lex.lex(optimize=1)
 
 if __name__ == "__main__":
     lexer.input("0xfffff")

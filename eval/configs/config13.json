@@ -4,8 +4,34 @@
     "optim" : 3,
     "schemes" : [
         {
-            "workload" : "capacity",
-            "granularity" : 256
+            "workload" : "cache",
+            "granularity" : 256,
+            "case_num": 16
+        },
+        {
+            "workload" : "cache",
+            "granularity" : 256,
+            "case_num": 256
+        },
+        {
+            "workload" : "lb",
+            "granularity" : 256,
+            "case_num": 16
+        },
+        {
+            "workload" : "lb",
+            "granularity" : 256,
+            "case_num": 256
+        },
+        {
+            "workload" : "nc",
+            "granularity" : 256,
+            "case_num": 16
+        },
+        {
+            "workload" : "nc",
+            "granularity" : 256,
+            "case_num": 256
         }
     ]
 }

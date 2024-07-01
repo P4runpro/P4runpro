@@ -1,6 +1,14 @@
+# ------------------------------------------------------------
+# ilp_solver.py
+# Solve the SMT problem
+# ------------------------------------------------------------
+
 import sys
-sys.path.insert(0, "/usr/local/python3/lib/python3.5/site-packages")
 from z3 import *
+
+
+# used for debug
+
 
 tb_not_ava = [
     [],
@@ -32,7 +40,7 @@ max_rec_time = 5
 ub = 5*22
 
 
-def solve(max_slice_number, tb_not_ava, mem_not_ava, forward, max_rec_time=2, max_rpb_number=22, max_ingressrpb_number=10, optimize=3, a=0.7, b=0.4):
+def solve(max_slice_number, tb_not_ava, mem_not_ava, forward, max_rec_time=2, max_rpb_number=22, max_ingressrpb_number=10, optimize=3, a=0.7, b=0.3):
     x = [Int("x" + str(i)) for i in range(max_slice_number)]
 
     solver = Optimize()

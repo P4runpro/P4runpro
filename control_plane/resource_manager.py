@@ -75,8 +75,26 @@ class Manager:
     def entry_allocated(self, e):
         self.allocated_program_entry[e.entry["program"]].append(e)
 
-    def get_clear_list(self, p):
+    def clear_if_exist(self, p):
         if p in self.allocated_program_entry.keys():
-            return self.allocated_program_entry[p]
-        else:
+            self.allocated_program_entry[p] *= 0
+        if p in self.allocated_program.keys():
+            self.allocated_program.pop(p)
+
+    def get_allocated_program_entry(self, p):
+        if p not in self.allocated_program_entry.keys():
             return None
+        else:
+            return self.allocated_program_entry[p]
+
+    def show_programs(self):
+        print("Existing programs:")
+        for pname in self.allocated_program.keys():
+            print(pname)
+
+    def check_existence(self, pname):
+        print(pname)
+        print(self.allocated_program.keys())
+        if pname in self.allocated_program.keys():
+            return True
+        return False

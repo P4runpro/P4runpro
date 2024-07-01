@@ -1,3 +1,10 @@
+//RPB in ingress and egress pipeline
+#include "../config.h"
+
+#ifndef _RUNPROBLOCK_
+#define _RUNPROBLOCK_
+
+
 {% for i in range(2) %}
 {% for stage in range(CONF[1][i][0], CONF[1][i][1]) %}
 control {{CONF[0][i]}}RPB{{stage + CONF[2][i]}}(
@@ -147,11 +154,12 @@ control {{CONF[0][i]}}RPB{{stage + CONF[2][i]}}(
         action extract_egintrmddeqtimedelta_har() {
             hdr.meta.reg.har = (bit<32>)eg_intr_md.deq_timedelta;
         }
+
         action modify_hdripv4ecn_sar() {
             hdr.ipv4.ecn = (bit<2>)hdr.meta.reg.sar;
         }
-
 {% endif %}
+
         action extract_hdrl5op_har() {
             hdr.meta.reg.har = hdr.l5.op;
         }
@@ -172,8 +180,16 @@ control {{CONF[0][i]}}RPB{{stage + CONF[2][i]}}(
             hdr.meta.reg.sar = (bit<32>)hdr.ipv4.total_len;
         }
 
+        action extract_hdrl5key3_sar() {
+            hdr.meta.reg.sar = hdr.l5.key3;
+        }
+
         action modify_hdrl5key3_sar() {
             hdr.l5.key3 = hdr.meta.reg.sar;
+        }
+
+        action modify_hdripv4dst_sar() {
+            hdr.ipv4.dst = hdr.meta.reg.sar;
         }
 
         //action for SALU operaiton
@@ -391,6 +407,8 @@ control {{CONF[0][i]}}RPB{{stage + CONF[2][i]}}(
                 address_translation_mask;
                 address_translation_offset;
 
+                //Due to the VLIW constraints, we disenable the register backup by default in our prototype
+                //It can be enabled by deletling some other actions
                 //backup;
                 //recover1;
                 //recover2;
@@ -412,7 +430,9 @@ control {{CONF[0][i]}}RPB{{stage + CONF[2][i]}}(
                 extract_hdrl5key2_mar;
                 extract_hdrtcptcp4thword_sar;
                 extract_hdripv4totallen_sar;
+                extract_hdrl5key3_sar;
                 modify_hdrl5key3_sar;
+                modify_hdripv4dst_sar;
 
                 salu_add_sub;
                 salu_and_or;
@@ -478,3 +498,5 @@ control {{CONF[0][i]}}RPB{{stage + CONF[2][i]}}(
 }
 {% endfor %}
 {% endfor %}
+
+#endif

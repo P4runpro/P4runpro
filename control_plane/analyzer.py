@@ -14,7 +14,27 @@ re_primitive_without_argument = r'HASH_5_TUPLE|HASH|DROP|RETURN|REPORT|backup|re
 
 re_primitive_branch = r'BRANCH'
 
-re_primitive_pseudo_mem = r'MOVE|ADDI|ANDI|XORI|NOT|SUBI|SUB|SGT|MEM(ADD|SUB|AND|OR|READ|WRITE|MAX)|HASH_5_TUPLE_MEM|HASH_MEM'
+re_primitive_pseudo_mem = r'MOVE|ADDI|ANDI|XORI|ORI|NOT|SUBI|SUB|SGT|MEM(ADD|SUB|AND|OR|READ|WRITE|MAX)|HASH_5_TUPLE_MEM|HASH_MEM'
+
+re_primitive_pseudo_need_supportive_reg = r'ADDI|ANDI|XORI|ORI|NOT|SUBI|SUB'
+
+re_primitive_access = {
+    "mar": r'MODIFY|BRANCH|MEM(ADD|SUB|AND|OR|READ|WRITE|MAX)|ADD|AND|OR|MAX|MIN|XOR|NOT|SUB|ADDI|ANDI|XORI|ORI|SUBI',
+    "sar": r'MODIFY|BRANCH|MEM(ADD|SUB|AND|OR|READ|WRITE|MAX)|ADD|AND|OR|MAX|MIN|XOR|NOT|SUB|ADDI|ANDI|XORI|ORI|SUBI',
+    "har": r'MODIFY|HASH|HASH_MEM|MEM(ADD|SUB|AND|OR|READ|WRITE|MAX)|ADD|AND|OR|MAX|MIN|XOR|NOT|SUB|ADDI|ANDI|XORI|ORI|SUBI'
+}
+
+re_primitive_assign = {
+    "mar": r'EXTRACT|HASH_5_TUPLE_MEM|HASH_MEM|LOADI|MOVE',
+    "sar": r'EXTRACT|LOADI|MOVE|MEMREAD',
+    "har": r'EXTRACT|HASH_5_TUPLE|LOADI|MOVE'
+}
+
+recover_dict = {
+    "mar": "recover1",
+    "sar": "recover2",
+    "har": "recover3"
+}
 
 primitive_action_mapping_dict = {
     "EXTRACT": "extract_<arg1>_<arg2>",
@@ -45,7 +65,9 @@ primitive_action_mapping_dict = {
     "mask": "address_translation_mask",
     "offset": "address_translation_offset",
     "backup": "backup",
-    "recover": "recover"
+    "recover1": "recover1",
+    "recover2": "recover2",
+    "recover3": "recover3"
 }
 
 
@@ -70,7 +92,10 @@ flow_filter3_items = [
 ]
 
 rpb_size = 22
-
+# If enabling register lifetime analysis, ensure that the action backup, recover1, recover2, and recover3 in all RPBs
+# For the default prototype we only enable backup and recover in the egress RPBs
+# and the insertion of backup and recover primitives is done manually
+register_backup_enabled = False
 
 class Entry:
     """
@@ -85,6 +110,7 @@ class Entry:
         self.entry = {"program": program, "table_name": table_name, "key_list": key_list, "data_list": data_list}
 
     def show(self):
+        print(self.entry["program"])
         print(self.entry["table_name"])
         print(self.entry["key_list"])
         print(self.entry["data_list"])
@@ -107,6 +133,7 @@ def parse_pseudo_primitive(pri_nodes, fbranchs):
         stage_offset = 0
         for i in range(len(primitives)):
             primitive = primitives[i]
+            pname = primitive.pname
             primitive_slice = []
             if primitive.type == "primitive":
                 if re.match(re_primitive_pseudo_mem, primitive.name):
@@ -116,25 +143,57 @@ def parse_pseudo_primitive(pri_nodes, fbranchs):
                         B = primitive.children[0].children[1]
                         if primitive.name == "MOVE":
                             Zero = Argument("argument", 1, None, "int", 0)
-                            primitive_slice.append(Primitive("primitive", 1, [A, Zero], "LOADI", True))
-                            primitive_slice.append(Primitive("primitive", 1, [A, B], "ADD", True))
+                            primitive_slice.append(Primitive("primitive", 1, [A, Zero], "LOADI", True, pname=pname))
+                            primitive_slice.append(Primitive("primitive", 1, [A, B], "ADD", True, pname=pname))
                         if primitive.name == "ADDI" or primitive.name == "ANDI" or primitive.name == "ORI" or primitive.name == "XORI":
-                            C = Argument("argument", 1, None, "register", get_supportive_reg([A.data_value]))
-                            primitive_slice.append(Primitive("primitive", 1, [C, B], "LOADI", True))
-                            primitive_slice.append(Primitive("primitive", 1, [A, C], primitive.name.rstrip('I'), True))
-                        if primitive.name == "SUBI":
+                            live = False
+                            reg = get_supportive_reg([A.data_value]) 
+                            if register_backup_enabled:
+                                live = lifetime_analysis(primitives, i, reg, fbranch)
+                                if live:
+                                    reg = get_supportive_reg([A.data_value, reg])
+                                    live = lifetime_analysis(primitives, i, reg, fbranch)
+                            C = Argument("argument", 1, None, "register", reg)
+                            if live:
+                                primitive_slice.append(Primitive("primitive", 1, None, "backup", pname=pname))
+                            primitive_slice.append(Primitive("primitive", 1, [C, B], "LOADI", True, pname=pname))
+                            primitive_slice.append(Primitive("primitive", 1, [A, C], primitive.name.rstrip('I'), True, pname=pname))
+                            if live:
+                                primitive_slice.append(Primitive("primitive", 1, None, recover_dict[reg], pname=pname))
+                        if primitive.name == "SUBI": #####stop here
                             B.data_value = 2**32 - B.data_value
-                            primitive_slice.append(Primitive("primitive", 1, [A, B], "ADDI", True))
+                            live = False
+                            reg = get_supportive_reg([A.data_value]) 
+                            if register_backup_enabled:
+                                live = lifetime_analysis(primitives, i, reg, fbranch)
+                                if live:
+                                    reg = get_supportive_reg([A.data_value, reg])
+                                    live = lifetime_analysis(primitives, i, reg, fbranch)
+                            C = Argument("argument", 1, None, "register", reg)
+                            if live:
+                                primitive_slice.append(Primitive("primitive", 1, None, "backup", pname=pname))
+                            primitive_slice.append(Primitive("primitive", 1, [C, B], "LOADI", True, pname=pname))
+                            primitive_slice.append(Primitive("primitive", 1, [A, C], "ADDI", True, pname=pname))
+                            if live:
+                                primitive_slice.append(Primitive("primitive", 1, None, recover_dict[reg], pname=pname))
                         if primitive.name == "SUB":
-                            C = Argument("argument", 1, None, "register", get_supportive_reg([A.data_value, B.data_value]))
+                            live = False
+                            reg = get_supportive_reg([A.data_value, B.data_value])
+                            if register_backup_enabled:
+                                live = lifetime_analysis(primitives, i, reg, fbranch)
+                            if live:
+                                primitive_slice.append(Primitive("primitive", 1, None, "backup", pname=pname))
+                            C = Argument("argument", 1, None, "register", reg)
                             Max = Argument("argument", 1, None, "int", 2**32 - 1)
                             One = Argument("argument", 1, None, "int", 1)
-                            primitive_slice.append(Primitive("primitive", 1, [C, Max], "LOADI", True))
-                            primitive_slice.append(Primitive("primitive", 1, [B, C], "XOR", True))
-                            primitive_slice.append(Primitive("primitive", 1, [A, B], "ADD", True))
-                            primitive_slice.append(Primitive("primitive", 1, [B, C], "XOR", True))
-                            primitive_slice.append(Primitive("primitive", 1, [C, One], "LOADI", True))
-                            primitive_slice.append(Primitive("primitive", 1, [A, C], "ADD", True))
+                            primitive_slice.append(Primitive("primitive", 1, [C, Max], "LOADI", True, pname=pname))
+                            primitive_slice.append(Primitive("primitive", 1, [B, C], "XOR", True, pname=pname))
+                            primitive_slice.append(Primitive("primitive", 1, [A, B], "ADD", True, pname=pname))
+                            primitive_slice.append(Primitive("primitive", 1, [B, C], "XOR", True, pname=pname))
+                            primitive_slice.append(Primitive("primitive", 1, [C, One], "LOADI", True, pname=pname))
+                            primitive_slice.append(Primitive("primitive", 1, [A, C], "ADD", True, pname=pname))
+                            if live:
+                                primitive_slice.append(Primitive("primitive", 1, None, recover_dict[reg], pname=pname))
                         '''
                         if primitive.name == "OR":
                             C = Argument("argument", 1, None, "register", get_supportive_reg([A.data_value, B.data_value]))
@@ -150,20 +209,31 @@ def parse_pseudo_primitive(pri_nodes, fbranchs):
                             primitive_slice.append(Primitive("primitive", 1, [A, C], "XOR", True))
                         '''
                         if primitive.name == "SGT":
-                            primitive_slice.append(Primitive("primitive", 1, [A, B], "MIN", True))
-                            primitive_slice.append(Primitive("primitive", 1, [A, B], "XOR", True))
+                            primitive_slice.append(Primitive("primitive", 1, [A, B], "MIN", True, pname=pname))
+                            primitive_slice.append(Primitive("primitive", 1, [A, B], "XOR", True, pname=pname))
                         if primitive.name == "SLT":
-                            primitive_slice.append(Primitive("primitive", 1, [A, B], "MAX", True))
-                            primitive_slice.append(Primitive("primitive", 1, [A, B], "XOR", True))
+                            primitive_slice.append(Primitive("primitive", 1, [A, B], "MAX", True, pname=pname))
+                            primitive_slice.append(Primitive("primitive", 1, [A, B], "XOR", True, pname=pname))
                     elif primitive.name == "NOT":
                         A = primitive.children[0].children[0]
                         Max = Argument("argument", 1, None, "int", 2 ** 32 - 1)
-                        C = Argument("argument", 1, None, "register", get_supportive_reg([A.data_value]))
-                        primitive_slice.append(Primitive("primitive", 1, [C, Max], "LOADI", True))
-                        primitive_slice.append(Primitive("primitive", 1, [A, C], "XOR", True))
+                        live = False
+                        reg = get_supportive_reg([A.data_value]) 
+                        if register_backup_enabled:
+                            live = lifetime_analysis(primitives, i, reg, fbranch)
+                            if live:
+                                reg = get_supportive_reg([A.data_value, reg])
+                                live = lifetime_analysis(primitives, i, reg, fbranch)
+                        C = Argument("argument", 1, None, "register", reg)
+                        if live:
+                            primitive_slice.append(Primitive("primitive", 1, None, "backup", pname=pname))
+                        primitive_slice.append(Primitive("primitive", 1, [C, Max], "LOADI", True, pname=pname))
+                        primitive_slice.append(Primitive("primitive", 1, [A, C], "XOR", True, pname=pname))
+                        if live:
+                            primitive_slice.append(Primitive("primitive", 1, None, recover_dict[reg], pname=pname))
                     elif primitive.name == "HASH_5_TUPLE_MEM" or primitive.name == "HASH_MEM":
                         mask = Argument("argument", 1, None, "int", size_to_mask(primitive.mem_size))
-                        new_pri = Primitive("primitive", 1, [mask], "mask", True)
+                        new_pri = Primitive("primitive", 1, [mask], "mask", True, pname=pname)
                         new_pri.pname = primitive.pname
                         primitive_slice.append(copy.deepcopy(primitive))
                         primitive_slice.append(new_pri)
@@ -172,7 +242,7 @@ def parse_pseudo_primitive(pri_nodes, fbranchs):
                             arg = Argument("argument", 1, None, "int", 0)
                         else:
                             arg = Argument("argument", 1, None, "int", 1)
-                        new_pri = Primitive("primitive", 1, [arg], "offset", True)
+                        new_pri = Primitive("primitive", 1, [arg], "offset", True, pname=pname)
                         new_pri.mem_size = primitive.mem_size
                         new_pri.mem_name = primitive.children[0].data_value
                         new_pri.pname = primitive.pname
@@ -209,11 +279,10 @@ def parse_pseudo_primitive(pri_nodes, fbranchs):
                     primitives_slices.append(primitive_slice)
 
         # serialize the pri_node_list
-        print(fbranch)
+        # print(fbranch)
                     
         '''
         for i in primitives_slices:
-            print(123)
             for j in i:
                 print(j.name)
                 print(j.stage)
@@ -412,21 +481,21 @@ def get_entry_rpb(ast_node):
                 argument_t_list.append(node.data_type)
                 argument_list.append(node.data_value)
         if ast_node.name == "EXTRACT" or ast_node.name == "MODIFY":
-            if not type_check(argument_t_list, ["field, register"]):
+            if not type_check(argument_t_list, ["field", "register"]):
                 print("Argument number or type error in primitive: " + ast_node.name)
             data_list = [
                 [],
                 prefix + str(rpb_number) + "." + primitive_action_mapping_dict[ast_node.name].replace("<arg1>", argument_list[0].replace(".", "")).replace("<arg2>", argument_list[1])
             ]
         elif ast_node.name == "LOADI":
-            if not type_check(argument_t_list, ["register, int"]):
+            if not type_check(argument_t_list, ["register", "int"]):
                 print("Argument number or type error in primitive: " + ast_node.name)
             data_list = [
                 [["i", argument_list[1]]],
                 prefix + str(rpb_number) + "." + primitive_action_mapping_dict[ast_node.name].replace("<arg1>", argument_list[0])
             ]
         elif ast_node.name == "ADD" or ast_node.name == "AND" or ast_node.name == "OR" or ast_node.name =="XOR" or ast_node.name =="MAX" or ast_node.name =="MIN":
-            if not type_check(argument_t_list, ["register, register"]):
+            if not type_check(argument_t_list, ["register", "register"]):
                 print("Argument number or type error in primitive: " + ast_node.name)
             data_list = [
                 [],
@@ -521,3 +590,47 @@ def get_entry_recirculation(pname, flow_id, iterations, flag):
         action_name
     ]
     return [Entry(pname, table_name, key_list, data_list)]
+
+
+def lifetime_analysis(primitives, i, reg, fbranch):
+    """
+    Register life time analysis
+    if the followed primitive first assigns the reg, the reg is not live
+    Arguments:
+    - prinitives, i, reg, fbranch
+    Return:
+    - True: live
+    - False: dead
+    """
+    mybranch = primitives[i].branch_id
+    for primitive in primitives[i+1:]:
+        bid = primitive.branch_id
+        if bid != mybranch:
+            if bid in fbranch.keys():
+                if  fbranch[bid][0] != mybranch:
+                    break
+            else:
+                break
+        if re.match(re_primitive_access[reg], primitive.name):
+            if re.match(r'MODIFY|HASH|HASH_MEM|MEM(ADD|SUB|AND|OR|READ|WRITE|MAX)|NOT|SUB|ADDI|ANDI|XORI|ORI|SUBI'):
+                return True
+            else:
+                if primitive.children[0].children[0].data_value == reg or primitive.children[0].children[1].data_value == reg:
+                    return True
+                continue
+        elif re.match(re_primitive_assign[reg], primitive.name):
+            if primitive.name == "LOADI" or primitive.name == "MOVE":
+                if primitive.children[0].children[0].data_value == reg:
+                    return False
+            elif primitive.name == "EXTRACT":
+                if primitive.children[0].children[1].data_value == reg:
+                    return False
+            else:
+                return False
+        else:
+            continue
+    return False
+
+def set_pname(primitive, pname):
+    primitive.pname = pname
+    return primitive
