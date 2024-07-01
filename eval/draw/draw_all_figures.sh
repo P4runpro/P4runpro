@@ -1,3 +1,4 @@
+#!/bin/bash
 # Figure 7(a)
 python3 draw_AllocationDelay.py  
 # Figure 7(b)

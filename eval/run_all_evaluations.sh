@@ -1,3 +1,4 @@
+#!/bin/bash
 # Evaluation for Figure 7(a)
 python3 allocation.py ./configs/config1.json
 # Evaluation for Figure 7(b)
