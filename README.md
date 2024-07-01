@@ -202,7 +202,7 @@ python3 allocation.py ./configs/config3.json
 python3 allocation.py ./configs/config7.json
 ```
 
-#### Overhead (Figure 10, Table 2)
+#### Overhead (Figure 10 and Table 2)
 
 After compilation of ```/your/path/to/P4runpro/p4src/p4runpro.p4```, see the generated logs in ```$SDE/build/p4-build/p4runpro/tofino/p4runpro/pipe/logs```and use [P4 Insight](https://www.intel.com/content/www/us/en/products/details/network-io/intelligent-fabric-processors/p4-insight.html) for overhead evaluation
 
@@ -211,8 +211,8 @@ After compilation of ```/your/path/to/P4runpro/p4src/p4runpro.p4```, see the gen
 * Draw the figures using the results
 
 ```bash
-cd draw
-draw_all_figures.sh
+cd /your/path/to/P4runpro/eval/draw
+./draw_all_figures.sh
 ```
 
 * **Note:** 
