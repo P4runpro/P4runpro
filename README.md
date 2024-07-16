@@ -318,6 +318,6 @@ If you have any other questions, you are welcome to contact the authors:
 
 ```
 The first author: Yifan Yang, Tsinghua University, yangyifan0202@gmail.com
-The corresponding author: Lin He, Tsinghua University, helin1170@gmail.com
+The corresponding author: Lin He, Tsinghua University, he-lin@tsinghua.edu.cn
 ```
 
