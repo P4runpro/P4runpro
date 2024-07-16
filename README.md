@@ -272,7 +272,7 @@ After compilation of ```/your/path/to/P4runpro/p4src/p4runpro.p4```, see the gen
   P4runpro> deploy -f /your/path/to/P4runpro/programs/Cache.p4runpro
   ```
 
-* Play the groud truth traffic and analysis recieved data
+* Play the groud truth traffic and analyze recieved data
 
 ##### Stateless load balancer
 
@@ -285,7 +285,7 @@ After compilation of ```/your/path/to/P4runpro/p4src/p4runpro.p4```, see the gen
   P4runpro> deploy -f /your/path/to/P4runpro/programs/LoadBalancer.p4runpro
   ```
 
-* Play the groud truth traffic and analysis recieved data  
+* Play the groud truth traffic and analyze recieved data  
 
 ##### Heavy hitter detector
 
@@ -298,7 +298,7 @@ After compilation of ```/your/path/to/P4runpro/p4src/p4runpro.p4```, see the gen
   P4runpro> deploy -f /your/path/to/P4runpro/programs/HeavyHitter.p4runpro
   ```
 
-* Play the groud truth traffic and analysis recieved data 
+* Play the groud truth traffic and analyze recieved data 
 
 ### License
 
