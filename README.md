@@ -61,7 +61,13 @@ We only make sure our prototype runs under these requirements:
 * Compile and run data plane
 
   ```bash
+  # compilation by p4_build.sh (test on SDE9.4.0)
   $SDE/p4_build.sh ./p4src/p4runpro.p4 P4FLAGS="-Xp4c=--traffic-limit=98"
+  # compilation by camke (test on SDE9.13.0)
+  cmake $SDE/p4studio/ -DCMAKE_INSTALL_PREFIX=$SDE/install -DCMAKE_MODULE_PATH=$SDE/cmake -DP4_NAME=p4runpro -DP4_LANG=p4-16 -DTOFINO=1 -DP4FLAGS="-Xp4c=--traffic-limit=98" -DP4_PATH=./p4src/p4runpro.p4
+  make & make install
+
+  # run switch
   $SDE/run_switchd.sh -p p4runpro
   ```
 
