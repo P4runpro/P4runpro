@@ -19,7 +19,7 @@ We only make sure our prototype runs under these requirements:
 
 * Control plane:  Intel SDK for the Tofino development with **SDE 9.4.0**
 * Python 2.7 for hardware running and Python 3.5 for simulation
-* Python module: jinjia2, ply, z3, gurobipy and matplotlib (for result reproduction)
+* Python module: jinjia2, ply, z3, gurobipy, scapy (for case study), and matplotlib (for result reproduction)
 
 ### Run P4runpro
 
@@ -248,7 +248,7 @@ After compilation of ```/your/path/to/P4runpro/p4src/p4runpro.p4```, see the gen
 
 #### Case study
 
-**Considering user privacy protection**, we cannot provide the campus network traffic used in our paper‘s case study. 
+**Considering user privacy protection**, we cannot provide the campus network traffic used in our paper‘s case study. We provide three simple scripts for evaluating the functionality of the program **Cache**
 
 ##### Impacts on Traffic
 
@@ -272,6 +272,11 @@ After compilation of ```/your/path/to/P4runpro/p4src/p4runpro.p4```, see the gen
 
 * Playing background traffic
 * Run the data plane and control plane as mentioned above
+* Configure the forward table
+
+  ```bash
+  P4runpro> add_froward -ip your_ingress_port_numebr -ep your_egress_port_numebr
+  ```
 
 * Deploy the program **Cache**
 
@@ -279,12 +284,45 @@ After compilation of ```/your/path/to/P4runpro/p4src/p4runpro.p4```, see the gen
   P4runpro> deploy -f /your/path/to/P4runpro/programs/Cache.p4runpro
   ```
 
-* Play the groud truth traffic and analyze recieved data
+* On the server connected to the switch, run the receiver (DO not forget to set your own ifname in the scripts)
+
+  ```bash
+  sudo python /your/path/to/P4runpro/server/receive.py
+  ```
+
+* Open another shell and send a cache read packet
+
+  ```bash
+  sudo python /your/path/to/P4runpro/server/cache_read.py
+  ```
+
+* Observe the receiver, you can get the returned packet with the default value ```b'\x00\x00\x00\x00'```
+
+* Send a cache write packet to change the cache value
+
+  ```bash
+  sudo python /your/path/to/P4runpro/server/cache_write.py
+  ```
+
+* The receiver has no reaction since the cache write packet is dropped by the switch
+
+* Send a cache read packet again 
+
+  ```bash
+  sudo python /your/path/to/P4runpro/server/cache_read.py
+  ```
+
+* Observe the receiver, the cache value changes to ```b'\x01\x02\x03\x04'```!
 
 ##### Stateless load balancer
 
 * Playing background traffic
 * Run the data plane and control plane as mentioned above
+* Configure the forward table
+
+  ```bash
+  P4runpro> add_froward -ip your_ingress_port_numebr -ep your_egress_port_numebr
+  ```
 
 * deploy the program **LB**
 
@@ -298,6 +336,11 @@ After compilation of ```/your/path/to/P4runpro/p4src/p4runpro.p4```, see the gen
 
 * Playing background traffic
 * Run the data plane and control plane as mentioned above
+* Configure the forward table
+
+  ```bash
+  P4runpro> add_froward -ip your_ingress_port_numebr -ep your_egress_port_numebr
+  ```
 
 * Deploy the program **HH**
 

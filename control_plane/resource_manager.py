@@ -93,8 +93,8 @@ class Manager:
             print(pname)
 
     def check_existence(self, pname):
-        print(pname)
-        print(self.allocated_program.keys())
+        #print(pname)
+        #print(self.allocated_program.keys())
         if pname in self.allocated_program.keys():
             return True
         return False

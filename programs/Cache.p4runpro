@@ -4,8 +4,8 @@ program cache(<hdr.udp.dst_port, 7777, 0xffff>) {
 	EXTRACT(hdr.l5.key1, sar);
 	EXTRACT(hdr.l5.key2, mar);
 	BRANCH:
-	case(<sar, 1, 0xffffffff>,
-		<har, 0x00000000, 0xffffffff>,
+	case(<har, 1, 0xffffffff>,
+		<sar, 0x00000000, 0xffffffff>,
 		<mar, 0x00008888, 0xffffffff>
 	) {
 		RETURN;
@@ -13,8 +13,8 @@ program cache(<hdr.udp.dst_port, 7777, 0xffff>) {
 		MEMREAD(mem1);
 		MODIFY(hdr.l5.key3, sar);
 	}
-	case(<sar, 2, 0xffffffff>,
-		<har, 0x00000000, 0xffffffff>,
+	case(<har, 2, 0xffffffff>,
+		<sar, 0x00000000, 0xffffffff>,
 		<mar, 0x00008888, 0xffffffff>
 	) {
 		DROP;
