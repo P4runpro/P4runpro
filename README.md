@@ -330,7 +330,7 @@ After compilation of ```/your/path/to/P4runpro/p4src/p4runpro.p4```, see the gen
   P4runpro> deploy -f /your/path/to/P4runpro/programs/LoadBalancer.p4runpro
   ```
 
-* Play the groud truth traffic and analyze recieved data  
+* Play the ground truth traffic and analyze received data  
 
 ##### Heavy hitter detector
 
@@ -348,7 +348,7 @@ After compilation of ```/your/path/to/P4runpro/p4src/p4runpro.p4```, see the gen
   P4runpro> deploy -f /your/path/to/P4runpro/programs/HeavyHitter.p4runpro
   ```
 
-* Play the groud truth traffic and analyze recieved data 
+* Play the ground truth traffic and analyze received data 
 
 ### License
 
@@ -356,10 +356,30 @@ This work is licensed under a Creative Commons Attribution International 4.0 BY 
 
 ### Cite
 
-If you feel our paper or prototype helpful, please cite our paper as follow:
+If you feel our paper or prototype helpful, please cite our paper as follows:
 
 ```cite
 Yifan Yang, Lin He, Jiasheng Zhou, Xiaoyi Shi, Jiamin Cao, and Ying Liu. 2024. P4runpro: Enabling Runtime Programmability for RMT Programmable Switches. In ACM SIGCOMM 2024 Conference (ACM SIGCOMM ’24), August 4–8, 2024, Sydney, NSW, Australia. ACM, New York, NY, USA, 17 pages. https://doi.org/10.1145/3651890.3672230
+```
+
+```cite
+@inproceedings{10.1145/3651890.3672230,
+author = {Yang, Yifan and He, Lin and Zhou, Jiasheng and Shi, Xiaoyi and Cao, Jiamin and Liu, Ying},
+title = {P4runpro: Enabling Runtime Programmability for RMT Programmable Switches},
+year = {2024},
+isbn = {9798400706141},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3651890.3672230},
+doi = {10.1145/3651890.3672230},
+abstract = {Programmable switches have revolutionized network operations by enabling the flexible customization of packet processing logic using language like P4. However, changing the programs running on the switch requires disturbing traffic and suspending other unrelated programs. In this paper, we present P4runpro, enabling runtime data plane updates with dynamic resource allocation. The P4runpro data plane abstracts hardware resources and defines dynamically reconfigurable atomic operations that form packet processing logic. P4runpro provides runtime programming interfaces called P4runpro primitives for the operator to write high-level programs. We have designed the P4runpro compiler to automatically and consistently link the P4runpro programs to the running data plane. We implement our prototype on a Tofino switch. We implement 15 example runtime programs using P4runpro to demonstrate its generality and expressiveness. Our evaluation results show that compared to the state-of-the-art, P4runpro can respond within hundreds of milliseconds, achieve an average of 60\% to 80\% dynamic resource utilization, concurrently run ≈0.6K to ≈2.8K programs, and introduce lower overhead. Our case studies illustrate the benefit of runtime programming and prove the same functionality between P4runpro and conventional P4 programs.},
+booktitle = {Proceedings of the ACM SIGCOMM 2024 Conference},
+pages = {921–937},
+numpages = {17},
+keywords = {runtime programmable switches, P4, RMT},
+location = {Sydney, NSW, Australia},
+series = {ACM SIGCOMM '24}
+}
 ```
 
 ### Contact
