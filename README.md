@@ -10,16 +10,22 @@ P4runpro enables runtime programmability for RMT switches. This prototype is imp
 * P4runpro control plane cmd controller
 * Example of 15 P4runpro programs
 * Evaluation code for reproduction of main results in the paper
+* Related documents including the published paper, the presentation slides and the screenshots of running our prototype and reproducing the results.
 
 ### Recommended Requirements
 
 We only make sure our prototype runs under these requirements:
 
 * Data plane: A Tofino-based hardware switch or a Tofino model
-
 * Control plane:  Intel SDK for the Tofino development with **SDE 9.4.0**
 * Python 2.7 for hardware running and Python 3.5 for simulation
 * Python module: jinjia2, ply, z3, gurobipy, scapy (for case study), and matplotlib (for result reproduction)
+
+**Note**: The tofino development environment is **Not open sourced and hard to get**, anyone who wants to use the Tofino model or SDK needs to sign an NDA and SLA to gain access to them (see the FAQs in the README of https://github.com/barefootnetworks/Open-Tofino/), after get a Group ID from the one who purchase the Intel Tofino chips and complete a form (see https://formfacade.com/public/116697843151790595985/all/form/1FAIpQLScQZrJX1oQOq8xW45e_DL6cSF11RX7aF7tZc7fdp2asVeHvAw).
+
+If you cannot access the Tofino environment, you can still perform simulations that don't require the Tofino model or SDK. These correspond to Figures 7, 8, 9, 12, 18, and 19 in the paper.
+
+We also probide the screenshots of how we complie and run our data plane and control plane on a Tofino 1 switch in the path ```/your/path/to/P4runpro/doc/Screenshots.zip```
 
 ### Run P4runpro
 
